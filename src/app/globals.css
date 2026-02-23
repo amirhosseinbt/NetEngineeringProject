@@ -162,6 +162,41 @@
   .section-title {
     @apply text-2xl font-bold text-[var(--brand-500)];
   }
+
+  .dashboard-hero {
+    @apply relative overflow-hidden rounded-2xl border border-[#b9caf9] bg-gradient-to-l from-[#eff4ff] via-[#f8faff] to-white p-5 shadow-[0_12px_34px_rgba(36,75,197,0.12)] md:p-6;
+  }
+
+  .dashboard-hero::before {
+    content: "";
+    @apply pointer-events-none absolute -left-20 -top-20 h-44 w-44 rounded-full bg-[rgba(36,75,197,0.14)] blur-2xl;
+  }
+
+  .dashboard-hero::after {
+    content: "";
+    @apply pointer-events-none absolute -bottom-24 -right-16 h-52 w-52 rounded-full bg-[rgba(36,75,197,0.12)] blur-2xl;
+  }
+
+  .metric-card {
+    @apply relative overflow-hidden rounded-xl border border-[#d7e1fb] bg-white/95 p-4 shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_rgba(36,75,197,0.15)] md:p-5;
+  }
+
+  .metric-pill {
+    @apply inline-flex items-center rounded-full bg-[#edf2ff] px-2.5 py-1 text-[11px] font-bold text-[#244BC5];
+  }
+
+  .action-tile {
+    @apply relative overflow-hidden rounded-xl border border-[#d7e1fb] bg-white p-4 shadow-[0_8px_22px_rgba(15,23,42,0.08)] transition duration-300 hover:-translate-y-0.5 hover:border-[#a9bff7] hover:shadow-[0_12px_26px_rgba(36,75,197,0.15)] md:p-5;
+  }
+
+  .action-tile::after {
+    content: "";
+    @apply pointer-events-none absolute -bottom-16 -left-10 h-28 w-28 rounded-full bg-[rgba(36,75,197,0.08)] blur-xl transition duration-300;
+  }
+
+  .action-tile:hover::after {
+    @apply bg-[rgba(36,75,197,0.14)];
+  }
 }
 
 input::-webkit-outer-spin-button,
