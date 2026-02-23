@@ -103,7 +103,7 @@ export default function RegisterPage() {
               type='button'
               disabled={!canSubmit || loading}
               onClick={handleRegister}
-              className='bg-white text-[#2148C0] disabled:brightness-75 text-xl shadow-2xl rounded-md h-10 w-full flex items-center justify-center hover:scale-105 duration-300 active:scale-95 disabled:active:scale-100'
+              className='primary-btn h-10 w-full text-base disabled:brightness-75'
             >
               {loading ? <Spinner /> : "ثبت نام"}
             </button>

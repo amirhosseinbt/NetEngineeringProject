@@ -18,7 +18,7 @@ export default function Header(){
             className='text-white cursor-pointer font-bold text-2xl tracking-tight hover:opacity-90 duration-300' onClick={()=>router.push('/')}>سامانه پیساز</p>
             <button
                 onClick={()=>handleLogout()}
-                className='text-2xl cursor-pointer text-white absolute left-0 rounded-md bg-white/10 p-1.5'><LogOut className='hover:scale-105 active:scale-95 duration-300'/></button>
+                className='text-2xl cursor-pointer absolute left-0 icon-btn'><LogOut className='hover:scale-105 active:scale-95 duration-300'/></button>
         </div>
     </div>
 }

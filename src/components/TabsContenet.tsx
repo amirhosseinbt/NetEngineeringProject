@@ -20,7 +20,7 @@ export default function TabContent() {
 
     return (
         <Suspense fallback={<Loading/>}>
-            <div className='w-full h-full'>
+            <div className='w-full h-full mt-4'>
                 {tabComponents[tab]}
             </div>
         </Suspense>

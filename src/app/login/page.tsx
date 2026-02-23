@@ -59,14 +59,14 @@ export default function Login() {
                         <button
                             type='button'
                             onClick={() => setRole("user")}
-                            className={`w-full rounded-md px-3 py-2 text-sm font-bold ${role === "user" ? "bg-white text-[#2148C0]" : "bg-white/20 text-white"}`}
+                            className={`segmented-btn ${role === "user" ? "segmented-btn-active" : ""}`}
                         >
                             ورود کاربر
                         </button>
                         <button
                             type='button'
                             onClick={() => setRole("admin")}
-                            className={`w-full rounded-md px-3 py-2 text-sm font-bold ${role === "admin" ? "bg-white text-[#2148C0]" : "bg-white/20 text-white"}`}
+                            className={`segmented-btn ${role === "admin" ? "segmented-btn-active" : ""}`}
                         >
                             ورود ادمین
                         </button>
@@ -99,7 +99,7 @@ export default function Login() {
                         type="submit"
                         disabled={loading || phoneNumber.length != 11}
                         onClick={() => handleLogin()}
-                        className='bg-white text-[#2148C0] disabled:brightness-75 text-xl shadow-2xl rounded-md h-10 w-[300px] flex items-center justify-center hover:scale-105 duration-300 active:scale-95 disabled:active:scale-100 '>{loading ?
+                        className='primary-btn h-10 w-[300px] text-base disabled:brightness-75'>{loading ?
                             <Spinner /> : "ورود"}</button>
 
                     {role === "user" && (

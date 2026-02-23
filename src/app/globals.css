@@ -152,11 +152,27 @@
   }
 
   .primary-btn {
-    @apply inline-flex items-center justify-center rounded-lg bg-[var(--brand-500)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--brand-600)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70;
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] px-4 py-2 text-sm font-bold text-white shadow-[0_8px_18px_rgba(36,75,197,0.28)] transition duration-200 hover:brightness-105 hover:shadow-[0_12px_24px_rgba(36,75,197,0.35)] active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[#8aa5ff] focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-65;
   }
 
   .secondary-btn {
-    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99];
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition duration-200 hover:bg-slate-50 hover:border-slate-400 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-[#c7d6ff] focus-visible:ring-offset-1;
+  }
+
+  .segmented-btn {
+    @apply w-full rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm font-bold text-white transition duration-200 hover:bg-white/20;
+  }
+
+  .segmented-btn-active {
+    @apply bg-white text-[#2148C0] shadow-[0_8px_18px_rgba(15,23,42,0.18)] border-white;
+  }
+
+  .icon-btn {
+    @apply inline-flex items-center justify-center rounded-lg bg-white/12 p-2 text-white transition hover:bg-white/20 active:scale-[0.98];
+  }
+
+  .danger-btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 hover:border-red-300 active:scale-[0.99];
   }
 
   .section-title {

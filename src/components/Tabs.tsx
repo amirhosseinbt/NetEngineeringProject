@@ -11,10 +11,10 @@ import {updateTab} from "@/redux/features/tabSlice";
 export default function Tab() {
     const dispatch = useDispatch<AppDispatch>();
     return <Tabs defaultValue="profile" className="w-full">
-        <TabsList className='w-full flex justify-between items-center gap-2 '>
+        <TabsList className='grid h-auto w-full grid-cols-2 gap-2 rounded-xl bg-[#edf2ff] p-2'>
             {
                 TabsDB.map((item) => (
-                    <TabsTrigger key={item.id} value={item.value} className='flex items-center justify-center w-full text-[#244BC5] cursor-pointer'
+                    <TabsTrigger key={item.id} value={item.value} className='flex items-center justify-center w-full rounded-lg py-2.5 text-sm font-extrabold text-[#244BC5] cursor-pointer'
                                  onClick={() => dispatch(updateTab(item.value))}>{item.name}</TabsTrigger>
                 ))
             }

@@ -25,7 +25,7 @@ export default function AdminTopBar() {
 
         <button
           onClick={handleLogout}
-          className='text-2xl cursor-pointer text-white absolute left-0 rounded-md bg-white/10 p-1.5'
+          className='text-2xl cursor-pointer absolute left-0 icon-btn'
           aria-label='خروج'
         >
           <LogOut className='hover:scale-105 active:scale-95 duration-300' />

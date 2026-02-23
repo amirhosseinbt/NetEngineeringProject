@@ -8,7 +8,7 @@ const links = [
 
 export default function ModuleLinks() {
   return (
-    <div className="page-shell pt-2">
+    <div className="mt-4">
       <div className="content-shell">
         <p className="mb-3 text-sm font-bold text-slate-700">دسترسی سریع</p>
         <div className="flex flex-wrap gap-2">

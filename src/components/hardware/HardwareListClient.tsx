@@ -40,7 +40,9 @@ export default function HardwareListClient() {
           <button
             onClick={() => setBasis("GPU")}
             className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-              basis === "GPU" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              basis === "GPU"
+                ? "bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] text-white shadow-[0_10px_20px_rgba(36,75,197,0.26)]"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             بر اساس GPU
@@ -48,7 +50,9 @@ export default function HardwareListClient() {
           <button
             onClick={() => setBasis("CPU")}
             className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-              basis === "CPU" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              basis === "CPU"
+                ? "bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] text-white shadow-[0_10px_20px_rgba(36,75,197,0.26)]"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             بر اساس CPU

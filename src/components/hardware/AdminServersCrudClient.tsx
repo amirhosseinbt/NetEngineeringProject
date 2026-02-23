@@ -286,7 +286,7 @@ export default function AdminServersCrudClient() {
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700 transition hover:bg-red-200"
+                        className="danger-btn"
                       >
                         حذف
                       </button>

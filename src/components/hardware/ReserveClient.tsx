@@ -26,7 +26,9 @@ export default function ReserveClient({ serverId }: { serverId: number }) {
           <button
             onClick={() => setUnit("HOURLY")}
             className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-              unit === "HOURLY" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              unit === "HOURLY"
+                ? "bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] text-white shadow-[0_10px_20px_rgba(36,75,197,0.26)]"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             رزرو ساعتی
@@ -34,7 +36,9 @@ export default function ReserveClient({ serverId }: { serverId: number }) {
           <button
             onClick={() => setUnit("DAILY")}
             className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-              unit === "DAILY" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              unit === "DAILY"
+                ? "bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] text-white shadow-[0_10px_20px_rgba(36,75,197,0.26)]"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             رزرو روزانه
