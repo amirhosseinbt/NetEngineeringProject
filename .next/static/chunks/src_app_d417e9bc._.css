@@ -2079,6 +2079,12 @@
     }
   }
 
+  @media (width >= 64rem) {
+    .lg\:grid-cols-\[1fr_1\.4fr\] {
+      grid-template-columns: 1fr 1.4fr;
+    }
+  }
+
   .dark\:text-gray-600:is(.dark *) {
     color: var(--color-gray-600);
   }

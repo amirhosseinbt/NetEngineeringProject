@@ -45,6 +45,8 @@ function authHeader() {
   };
 }
 
+const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
+
 function delay<T>(data: T, ms = 250): Promise<T> {
   return new Promise((resolve) => {
     setTimeout(() => resolve(data), ms);
@@ -64,6 +66,28 @@ function applyServerFilters(
     }
     return true;
   });
+}
+
+function getMockServersStore(): HardwareServer[] {
+  if (typeof window === "undefined") return [...mockServers];
+  const raw = localStorage.getItem(MOCK_SERVERS_STORAGE_KEY);
+  if (!raw) {
+    localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(mockServers));
+    return [...mockServers];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [...mockServers];
+    return parsed as HardwareServer[];
+  } catch {
+    return [...mockServers];
+  }
+}
+
+function setMockServersStore(servers: HardwareServer[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(servers));
 }
 
 export const hardwareApi = {
@@ -154,12 +178,68 @@ export const hardwareApi = {
   },
 
   async getAdminServers(): Promise<HardwareServer[]> {
-    if (USE_MOCKS) return delay(mockServers);
+    if (USE_MOCKS) return delay(getMockServersStore());
 
     const response = await axios.get<{ data: HardwareServer[] }>(`${API_BASE}${ENDPOINTS.adminServers}`, {
       headers: authHeader(),
     });
     return response.data.data;
+  },
+
+  async createAdminServer(payload: Omit<HardwareServer, "id">): Promise<HardwareServer> {
+    if (USE_MOCKS) {
+      const servers = getMockServersStore();
+      const nextId = servers.length > 0 ? Math.max(...servers.map((item) => item.id)) + 1 : 1;
+      const created: HardwareServer = { id: nextId, ...payload };
+      const updated = [...servers, created];
+      setMockServersStore(updated);
+      return delay(created);
+    }
+
+    const response = await axios.post<{ data: HardwareServer }>(
+      `${API_BASE}${ENDPOINTS.adminServers}`,
+      payload,
+      { headers: authHeader() }
+    );
+    return response.data.data;
+  },
+
+  async updateAdminServer(
+    serverId: number,
+    payload: Partial<Omit<HardwareServer, "id">>
+  ): Promise<HardwareServer> {
+    if (USE_MOCKS) {
+      const servers = getMockServersStore();
+      const index = servers.findIndex((item) => item.id === serverId);
+      if (index === -1) throw new Error("SERVER_NOT_FOUND");
+
+      const updatedServer: HardwareServer = { ...servers[index], ...payload };
+      const updated = [...servers];
+      updated[index] = updatedServer;
+      setMockServersStore(updated);
+      return delay(updatedServer);
+    }
+
+    const response = await axios.patch<{ data: HardwareServer }>(
+      `${API_BASE}${ENDPOINTS.adminServers}/${serverId}`,
+      payload,
+      { headers: authHeader() }
+    );
+    return response.data.data;
+  },
+
+  async deleteAdminServer(serverId: number): Promise<{ success: boolean }> {
+    if (USE_MOCKS) {
+      const servers = getMockServersStore();
+      const updated = servers.filter((item) => item.id !== serverId);
+      setMockServersStore(updated);
+      return delay({ success: true });
+    }
+
+    await axios.delete(`${API_BASE}${ENDPOINTS.adminServers}/${serverId}`, {
+      headers: authHeader(),
+    });
+    return { success: true };
   },
 
   async getAdminUsers(): Promise<AdminUser[]> {
