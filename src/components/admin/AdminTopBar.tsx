@@ -14,15 +14,21 @@ export default function AdminTopBar() {
   };
 
   return (
-    <div className="w-full bg-[#244BC5] px-6 py-3 shadow-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between">
-        <p className="text-lg font-bold text-white">پنل مدیریت</p>
+    <div className='w-full bg-[#244BC5] shadow-2xl px-5 py-3'>
+      <div className='w-full flex items-center justify-center h-full relative'>
+        <p
+          className='text-white cursor-pointer font-bold text-2xl hover:scale-105 duration-300'
+          onClick={() => router.push('/admin')}
+        >
+          پنل مدیریت
+        </p>
+
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-bold text-[#244BC5]"
+          className='text-2xl cursor-pointer text-white absolute left-0'
+          aria-label='خروج'
         >
-          <LogOut size={16} />
-          خروج
+          <LogOut className='hover:scale-105 active:scale-95 duration-300' />
         </button>
       </div>
     </div>

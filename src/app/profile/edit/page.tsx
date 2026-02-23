@@ -1,6 +1,5 @@
 'use client'
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { UserRound, Phone } from "lucide-react";
@@ -61,43 +60,37 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div
-      className='w-full h-screen relative bg-[#2148C0]'
-      style={{
-        backgroundImage: `url('/images/BG.webp')`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'cover',
-      }}
-    >
-      <div className='size-full flex items-center justify-center'>
-        <div className='flex flex-col items-center justify-center gap-8'>
-          <Image src='/images/icon.svg' alt='logo' width={120} height={120} />
+    <div className='w-full p-6'>
+      <div className='mx-auto w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl'>
+        <h1 className='text-2xl font-bold text-[#244BC5]'>ویرایش حساب کاربری</h1>
+        <p className='mt-2 text-sm text-slate-600'>
+          اطلاعات هویتی و شماره تماس خود را به‌روزرسانی کنید.
+        </p>
 
-          <div className='flex items-center flex-col justify-center gap-4 w-[320px]'>
-            <p className='text-white text-lg font-bold'>ویرایش حساب کاربری</p>
-
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <UserRound className='text-white' size={18} />
+        <div className='mt-5 rounded-xl bg-[#D9D9D9] p-4 shadow-xl'>
+          <div className='grid gap-3'>
+            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+              <UserRound className='text-[#244BC5]' size={18} />
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder='نام'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
+                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
               />
             </div>
 
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <UserRound className='text-white' size={18} />
+            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+              <UserRound className='text-[#244BC5]' size={18} />
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder='نام خانوادگی'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
+                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
               />
             </div>
 
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <Phone className='text-white' size={18} />
+            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+              <Phone className='text-[#244BC5]' size={18} />
               <input
                 type='tel'
                 value={phoneNumber}
@@ -105,22 +98,27 @@ export default function EditProfilePage() {
                 pattern='[0-9]*'
                 inputMode='numeric'
                 placeholder='شماره تلفن'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
+                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
               />
             </div>
 
-            <button
-              type='button'
-              disabled={!canSubmit || loading || loadingProfile}
-              onClick={handleSave}
-              className='bg-white text-[#2148C0] disabled:brightness-75 text-xl shadow-2xl rounded-md h-10 w-full flex items-center justify-center hover:scale-105 duration-300 active:scale-95 disabled:active:scale-100'
-            >
-              {loading || loadingProfile ? <Spinner /> : "ذخیره تغییرات"}
-            </button>
+            <div className='mt-2 flex gap-2'>
+              <button
+                type='button'
+                disabled={!canSubmit || loading || loadingProfile}
+                onClick={handleSave}
+                className='bg-[#244BC5] text-white disabled:brightness-75 text-sm font-bold rounded-md h-10 px-4 flex items-center justify-center'
+              >
+                {loading || loadingProfile ? <Spinner /> : "ذخیره تغییرات"}
+              </button>
 
-            <Link href='/' className='text-white text-sm underline underline-offset-4'>
-              بازگشت به صفحه اصلی
-            </Link>
+              <Link
+                href='/'
+                className='rounded-md bg-white border border-slate-300 px-4 h-10 text-sm font-bold text-slate-700 flex items-center justify-center'
+              >
+                بازگشت
+              </Link>
+            </div>
           </div>
         </div>
       </div>
