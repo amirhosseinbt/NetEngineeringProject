@@ -186,6 +186,12 @@ function setMockUsers(users) {
     if ("TURBOPACK compile-time truthy", 1) return;
     "TURBOPACK unreachable";
 }
+function getCurrentMockPhoneFromToken() {
+    if ("TURBOPACK compile-time truthy", 1) return null;
+    "TURBOPACK unreachable";
+    const token = undefined;
+    const prefix = undefined;
+}
 const authApi = {
     async register (payload) {
         if (USE_MOCKS) {
@@ -235,6 +241,63 @@ const authApi = {
         return {
             token: response.data.data.token,
             isVip: Boolean(response.data.data.is_vip)
+        };
+    },
+    async getProfile () {
+        if (USE_MOCKS) {
+            const phone = getCurrentMockPhoneFromToken();
+            if (!phone) throw new Error("UNAUTHORIZED");
+            const user = getMockUsers().find((item)=>item.phoneNumber === phone);
+            if (!user) throw new Error("USER_NOT_FOUND");
+            return {
+                firstName: user.firstName,
+                lastName: user.lastName,
+                phoneNumber: user.phoneNumber
+            };
+        }
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get(`${API_BASE}/api/profile/`, {
+            headers: {
+                Authorization: ("TURBOPACK compile-time falsy", 0) ? ("TURBOPACK unreachable", undefined) : ""
+            }
+        });
+        return {
+            firstName: response.data.data.first_name,
+            lastName: response.data.data.last_name,
+            phoneNumber: response.data.data.phone_number
+        };
+    },
+    async updateProfile (payload) {
+        if (USE_MOCKS) {
+            const phone = getCurrentMockPhoneFromToken();
+            if (!phone) throw new Error("UNAUTHORIZED");
+            const users = getMockUsers();
+            const currentUser = users.find((item)=>item.phoneNumber === phone);
+            if (!currentUser) throw new Error("USER_NOT_FOUND");
+            const duplicatePhoneUser = users.find((item)=>item.phoneNumber === payload.phoneNumber && item.id !== currentUser.id);
+            if (duplicatePhoneUser) throw new Error("PHONE_EXISTS");
+            const updatedUsers = users.map((item)=>item.id === currentUser.id ? {
+                    ...item,
+                    firstName: payload.firstName,
+                    lastName: payload.lastName,
+                    phoneNumber: payload.phoneNumber
+                } : item);
+            setMockUsers(updatedUsers);
+            localStorage.setItem("token", `mock-token-${payload.phoneNumber}`);
+            return {
+                success: true
+            };
+        }
+        await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].patch(`${API_BASE}/api/profile/`, {
+            first_name: payload.firstName,
+            last_name: payload.lastName,
+            phone_number: payload.phoneNumber
+        }, {
+            headers: {
+                Authorization: ("TURBOPACK compile-time falsy", 0) ? ("TURBOPACK unreachable", undefined) : ""
+            }
+        });
+        return {
+            success: true
         };
     }
 };

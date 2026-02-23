@@ -10,5 +10,6 @@
   "/admin/servers/page": "app/admin/servers/page.js",
   "/admin/credentials/page": "app/admin/credentials/page.js",
   "/admin/users/page": "app/admin/users/page.js",
-  "/register/page": "app/register/page.js"
+  "/register/page": "app/register/page.js",
+  "/profile/edit/page": "app/profile/edit/page.js"
 }

@@ -303,18 +303,17 @@ const authApi = {
 };
 ;
 }}),
-"[project]/src/app/register/page.tsx [app-ssr] (ecmascript)": ((__turbopack_context__) => {
+"[project]/src/app/profile/edit/page.tsx [app-ssr] (ecmascript)": ((__turbopack_context__) => {
 "use strict";
 
 var { g: global, d: __dirname } = __turbopack_context__;
 {
 __turbopack_context__.s({
-    "default": (()=>RegisterPage)
+    "default": (()=>EditProfilePage)
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/user-round.js [app-ssr] (ecmascript) <export default as UserRound>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$phone$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Phone$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/phone.js [app-ssr] (ecmascript) <export default as Phone>");
@@ -330,30 +329,51 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$authApi$2
 ;
 ;
 ;
-;
-function RegisterPage() {
-    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+function EditProfilePage() {
     const [firstName, setFirstName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [lastName, setLastName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [phoneNumber, setPhoneNumber] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
-    const canSubmit = firstName.trim().length > 1 && lastName.trim().length > 1 && phoneNumber.length === 11;
-    const handleRegister = async ()=>{
+    const [loadingProfile, setLoadingProfile] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(true);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const run = async ()=>{
+            try {
+                setLoadingProfile(true);
+                const data = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$authApi$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["authApi"].getProfile();
+                setFirstName(data.firstName);
+                setLastName(data.lastName);
+                setPhoneNumber(data.phoneNumber);
+            } catch (e) {
+                console.log(e);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("بارگذاری اطلاعات کاربر انجام نشد.");
+            } finally{
+                setLoadingProfile(false);
+            }
+        };
+        run();
+    }, []);
+    const canSubmit = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        return firstName.trim().length > 1 && lastName.trim().length > 1 && phoneNumber.length === 11;
+    }, [
+        firstName,
+        lastName,
+        phoneNumber
+    ]);
+    const handleSave = async ()=>{
         try {
             setLoading(true);
-            await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$authApi$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["authApi"].register({
+            await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$services$2f$authApi$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["authApi"].updateProfile({
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
                 phoneNumber
             });
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success("ثبت نام با موفقیت انجام شد. حالا وارد شوید.");
-            router.push("/login");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success("اطلاعات حساب کاربری با موفقیت ذخیره شد.");
         } catch (e) {
             console.log(e);
             if (e instanceof Error && e.message === "PHONE_EXISTS") {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("این شماره قبلا ثبت نام شده است.");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("این شماره تلفن قبلا استفاده شده است.");
             } else {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("ثبت نام انجام نشد. دوباره تلاش کنید.");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("ذخیره اطلاعات انجام نشد.");
             }
         } finally{
             setLoading(false);
@@ -377,38 +397,19 @@ function RegisterPage() {
                         width: 120,
                         height: 120
                     }, void 0, false, {
-                        fileName: "[project]/src/app/register/page.tsx",
-                        lineNumber: 59,
+                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                        lineNumber: 74,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center flex-col justify-center gap-4 w-[320px]",
                         children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "flex items-center border h-10 border-white w-full rounded-md px-2",
-                                children: [
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"], {
-                                        className: "text-white",
-                                        size: 18
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 63,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                        value: firstName,
-                                        onChange: (e)=>setFirstName(e.target.value),
-                                        placeholder: "نام",
-                                        className: "w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200"
-                                    }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 64,
-                                        columnNumber: 15
-                                    }, this)
-                                ]
-                            }, void 0, true, {
-                                fileName: "[project]/src/app/register/page.tsx",
-                                lineNumber: 62,
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                className: "text-white text-lg font-bold",
+                                children: "ویرایش حساب کاربری"
+                            }, void 0, false, {
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 77,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -418,8 +419,35 @@ function RegisterPage() {
                                         className: "text-white",
                                         size: 18
                                     }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 73,
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 80,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                        value: firstName,
+                                        onChange: (e)=>setFirstName(e.target.value),
+                                        placeholder: "نام",
+                                        className: "w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 81,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 79,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex items-center border h-10 border-white w-full rounded-md px-2",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$user$2d$round$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__UserRound$3e$__["UserRound"], {
+                                        className: "text-white",
+                                        size: 18
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 90,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -428,14 +456,14 @@ function RegisterPage() {
                                         placeholder: "نام خانوادگی",
                                         className: "w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200"
                                     }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 74,
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 91,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
-                                fileName: "[project]/src/app/register/page.tsx",
-                                lineNumber: 72,
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 89,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -445,79 +473,73 @@ function RegisterPage() {
                                         className: "text-white",
                                         size: 18
                                     }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 83,
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 100,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                         type: "tel",
                                         value: phoneNumber,
                                         onChange: (e)=>setPhoneNumber(e.target.value),
-                                        onKeyDown: (event)=>{
-                                            if (event.key === 'Enter' && canSubmit) {
-                                                event.preventDefault();
-                                                handleRegister();
-                                            }
-                                        },
                                         pattern: "[0-9]*",
                                         inputMode: "numeric",
                                         placeholder: "شماره تلفن",
                                         className: "w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200"
                                     }, void 0, false, {
-                                        fileName: "[project]/src/app/register/page.tsx",
-                                        lineNumber: 84,
+                                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                                        lineNumber: 101,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
-                                fileName: "[project]/src/app/register/page.tsx",
-                                lineNumber: 82,
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 99,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                 type: "button",
-                                disabled: !canSubmit || loading,
-                                onClick: handleRegister,
+                                disabled: !canSubmit || loading || loadingProfile,
+                                onClick: handleSave,
                                 className: "bg-white text-[#2148C0] disabled:brightness-75 text-xl shadow-2xl rounded-md h-10 w-full flex items-center justify-center hover:scale-105 duration-300 active:scale-95 disabled:active:scale-100",
-                                children: loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$Spinner$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
-                                    fileName: "[project]/src/app/register/page.tsx",
-                                    lineNumber: 107,
-                                    columnNumber: 26
-                                }, this) : "ثبت نام"
+                                children: loading || loadingProfile ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$Spinner$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
+                                    fileName: "[project]/src/app/profile/edit/page.tsx",
+                                    lineNumber: 118,
+                                    columnNumber: 44
+                                }, this) : "ذخیره تغییرات"
                             }, void 0, false, {
-                                fileName: "[project]/src/app/register/page.tsx",
-                                lineNumber: 101,
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 112,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                href: "/login",
+                                href: "/",
                                 className: "text-white text-sm underline underline-offset-4",
-                                children: "قبلا ثبت نام کرده اید؟ ورود"
+                                children: "بازگشت به صفحه اصلی"
                             }, void 0, false, {
-                                fileName: "[project]/src/app/register/page.tsx",
-                                lineNumber: 110,
+                                fileName: "[project]/src/app/profile/edit/page.tsx",
+                                lineNumber: 121,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
-                        fileName: "[project]/src/app/register/page.tsx",
-                        lineNumber: 61,
+                        fileName: "[project]/src/app/profile/edit/page.tsx",
+                        lineNumber: 76,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
-                fileName: "[project]/src/app/register/page.tsx",
-                lineNumber: 58,
+                fileName: "[project]/src/app/profile/edit/page.tsx",
+                lineNumber: 73,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
-            fileName: "[project]/src/app/register/page.tsx",
-            lineNumber: 57,
+            fileName: "[project]/src/app/profile/edit/page.tsx",
+            lineNumber: 72,
             columnNumber: 7
         }, this)
     }, void 0, false, {
-        fileName: "[project]/src/app/register/page.tsx",
-        lineNumber: 49,
+        fileName: "[project]/src/app/profile/edit/page.tsx",
+        lineNumber: 64,
         columnNumber: 5
     }, this);
 }
@@ -525,4 +547,4 @@ function RegisterPage() {
 
 };
 
-//# sourceMappingURL=%5Broot%20of%20the%20server%5D__336b991e._.js.map
+//# sourceMappingURL=%5Broot%20of%20the%20server%5D__184ebaf0._.js.map
