@@ -1,11 +1,6 @@
 import type { ReactNode } from "react";
-import Header from "@/components/Header";
+import UserShell from "@/components/user/UserShell";
 
 export default function HardwareLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="w-full flex flex-col">
-      <Header />
-      {children}
-    </div>
-  );
+  return <UserShell>{children}</UserShell>;
 }

@@ -78,8 +78,8 @@ export default function CheckoutClient({ serverId, unit, startAt, endAt }: Check
               </p>
             )}
             {paidReservationId && (
-              <Link href="/my-services" className="secondary-btn mt-2 inline-flex">
-                مشاهده در سرویس های من
+              <Link href="/" className="secondary-btn mt-2 inline-flex">
+                مشاهده در داشبورد کاربر
               </Link>
             )}
           </div>

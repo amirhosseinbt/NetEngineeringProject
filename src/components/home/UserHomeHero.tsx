@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Cpu, Settings, UserCircle2 } from "lucide-react";
+import { ChevronLeft, Cpu, UserCircle2 } from "lucide-react";
 
 const quickLinks = [
   {
@@ -10,13 +10,6 @@ const quickLinks = [
     href: "/hardware",
     description: "انتخاب سیستم و رزرو بازه زمانی",
     icon: Cpu,
-  },
-  {
-    id: "services",
-    label: "سرویس های من",
-    href: "/my-services",
-    description: "پیگیری سفارش‌ها و اطلاعات دسترسی",
-    icon: Settings,
   },
   {
     id: "profile",

@@ -302,6 +302,58 @@
       radial-gradient(460px 180px at 100% -20%, rgba(36, 75, 197, 0.16), transparent 65%),
       linear-gradient(160deg, #f8fbff 0%, #eef3ff 56%, #eaf0ff 100%);
   }
+
+  .user-shell {
+    direction: rtl;
+    @apply min-h-screen w-full p-4 md:p-6;
+    background:
+      radial-gradient(1200px 460px at 110% -10%, rgba(36, 75, 197, 0.16), transparent 60%),
+      radial-gradient(900px 360px at -10% 0%, rgba(29, 60, 161, 0.12), transparent 58%),
+      linear-gradient(180deg, #eef3ff 0%, #f5f8ff 42%, #eef3ff 100%);
+  }
+
+  .user-grid {
+    @apply grid w-full grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6;
+  }
+
+  .user-header {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d9e4ff] px-4 py-3 shadow-[0_10px_26px_rgba(36,75,197,0.1)] md:px-5;
+    background:
+      radial-gradient(420px 160px at 105% -30%, rgba(36, 75, 197, 0.18), transparent 60%),
+      linear-gradient(120deg, #f7faff 0%, #eef3ff 58%, #e9f0ff 100%);
+  }
+
+  .user-header-title {
+    @apply text-base font-extrabold text-[#1d3ca1] md:text-lg;
+  }
+
+  .user-main-card {
+    @apply min-h-[calc(100vh-3rem)] rounded-2xl border border-[#d9e4ff] bg-white/88 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-[2px] md:p-6 lg:p-8;
+  }
+
+  .user-side-card {
+    @apply flex min-h-[calc(100vh-3rem)] flex-col rounded-2xl border border-[#d9e4ff] bg-white/88 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-[2px];
+  }
+
+  .user-search-box {
+    @apply flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-[#f3f6ff] px-3;
+  }
+
+  .user-search-input {
+    @apply h-full w-full bg-transparent text-sm font-bold text-slate-600 outline-none placeholder:text-slate-500;
+  }
+
+  .user-side-link {
+    @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-600 transition hover:bg-[#edf2ff];
+  }
+
+  .user-side-link-active {
+    @apply bg-[#e7efff] text-[#244BC5];
+  }
+
+  .user-side-logout {
+    @apply mt-6 flex items-center justify-between rounded-xl bg-[#edf2ff] px-4 py-3 text-base font-bold text-[#244BC5] transition hover:brightness-95;
+  }
 }
 
 input::-webkit-outer-spin-button,
