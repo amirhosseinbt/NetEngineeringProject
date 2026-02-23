@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  getMockMonthAvailability,
   getMockPreview,
   getMockTimeSlots,
   mockAdminReservations,
@@ -12,6 +13,7 @@ import type {
   AdminReservation,
   AdminUser,
   BuildBasis,
+  CalendarDayAvailability,
   DashboardStats,
   HardwareServer,
   PurchasedService,
@@ -26,6 +28,7 @@ const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false" || !API_BASE;
 const ENDPOINTS = {
   dashboardStats: "/dashboard/stats",
   serverList: "/hardware/servers",
+  serverMonthAvailability: (serverId: number) => `/hardware/servers/${serverId}/calendar`,
   serverTimeSlots: (serverId: number) => `/hardware/servers/${serverId}/timeslots`,
   reservationPreview: "/hardware/reservations/preview",
   reservationCheckout: "/hardware/reservations/checkout",
@@ -85,15 +88,31 @@ export const hardwareApi = {
 
   async getServerTimeSlots(serverId: number, params: { unit: RentalUnit; date: string }): Promise<TimeSlot[]> {
     if (USE_MOCKS) {
-      void serverId;
-      void params.date;
-      return delay(getMockTimeSlots(params.unit));
+      return delay(getMockTimeSlots({ serverId, unit: params.unit, date: params.date }));
     }
 
     const response = await axios.get<{ data: TimeSlot[] }>(`${API_BASE}${ENDPOINTS.serverTimeSlots(serverId)}`, {
       params,
       headers: authHeader(),
     });
+    return response.data.data;
+  },
+
+  async getMonthAvailability(
+    serverId: number,
+    params: { unit: RentalUnit; month: string }
+  ): Promise<CalendarDayAvailability[]> {
+    if (USE_MOCKS) {
+      return delay(getMockMonthAvailability({ serverId, unit: params.unit, month: params.month }));
+    }
+
+    const response = await axios.get<{ data: CalendarDayAvailability[] }>(
+      `${API_BASE}${ENDPOINTS.serverMonthAvailability(serverId)}`,
+      {
+        params,
+        headers: authHeader(),
+      }
+    );
     return response.data.data;
   },
 

@@ -21,6 +21,13 @@ export interface TimeSlot {
   isReserved: boolean;
 }
 
+export type DayAvailabilityStatus = "available" | "partial" | "reserved";
+
+export interface CalendarDayAvailability {
+  date: string; // YYYY-MM-DD
+  status: DayAvailabilityStatus;
+}
+
 export interface ReservationPreview {
   serverId: number;
   unit: RentalUnit;

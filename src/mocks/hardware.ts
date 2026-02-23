@@ -1,6 +1,7 @@
 import type {
   AdminReservation,
   AdminUser,
+  CalendarDayAvailability,
   DashboardStats,
   HardwareServer,
   PurchasedService,
@@ -99,21 +100,82 @@ export const mockStats: DashboardStats = {
   purchasesCount: 2,
 };
 
-export function getMockTimeSlots(unit: RentalUnit): TimeSlot[] {
-  if (unit === "DAILY") {
-    return [
-      { startAt: "2026-02-24T00:00:00.000Z", endAt: "2026-02-25T00:00:00.000Z", isReserved: true },
-      { startAt: "2026-02-25T00:00:00.000Z", endAt: "2026-02-26T00:00:00.000Z", isReserved: false },
-      { startAt: "2026-02-26T00:00:00.000Z", endAt: "2026-02-27T00:00:00.000Z", isReserved: false },
-    ];
+function pad2(value: number): string {
+  return value.toString().padStart(2, "0");
+}
+
+function monthLength(year: number, month: number): number {
+  return new Date(year, month, 0).getDate();
+}
+
+function seeded(serverId: number, year: number, month: number, day: number): number {
+  return (serverId * 17 + year * 3 + month * 11 + day * 7) % 10;
+}
+
+export function getMockMonthAvailability(params: {
+  serverId: number;
+  unit: RentalUnit;
+  month: string; // YYYY-MM
+}): CalendarDayAvailability[] {
+  const [yearStr, monthStr] = params.month.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const days = monthLength(year, month);
+
+  const result: CalendarDayAvailability[] = [];
+
+  for (let day = 1; day <= days; day += 1) {
+    const score = seeded(params.serverId, year, month, day);
+
+    let status: CalendarDayAvailability["status"] = "available";
+    if (params.unit === "DAILY") {
+      status = score < 2 ? "reserved" : "available";
+    } else {
+      status = score < 2 ? "reserved" : score < 5 ? "partial" : "available";
+    }
+
+    result.push({
+      date: `${year}-${pad2(month)}-${pad2(day)}`,
+      status,
+    });
   }
 
-  return [
-    { startAt: "2026-02-24T08:00:00.000Z", endAt: "2026-02-24T10:00:00.000Z", isReserved: true },
-    { startAt: "2026-02-24T10:00:00.000Z", endAt: "2026-02-24T12:00:00.000Z", isReserved: false },
-    { startAt: "2026-02-24T12:00:00.000Z", endAt: "2026-02-24T14:00:00.000Z", isReserved: false },
-    { startAt: "2026-02-24T14:00:00.000Z", endAt: "2026-02-24T16:00:00.000Z", isReserved: true },
-  ];
+  return result;
+}
+
+export function getMockTimeSlots(params: {
+  serverId: number;
+  unit: RentalUnit;
+  date: string; // YYYY-MM-DD
+}): TimeSlot[] {
+  if (params.unit === "DAILY") {
+    const start = new Date(`${params.date}T00:00:00`);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+
+    return [{ startAt: start.toISOString(), endAt: end.toISOString(), isReserved: false }];
+  }
+
+  const [yearStr, monthStr, dayStr] = params.date.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const day = Number(dayStr);
+
+  const slots: TimeSlot[] = [];
+
+  for (let hour = 8; hour < 24; hour += 2) {
+    const start = new Date(year, month - 1, day, hour, 0, 0);
+    const end = new Date(year, month - 1, day, hour + 2, 0, 0);
+    const score = (seeded(params.serverId, year, month, day) + hour) % 10;
+
+    slots.push({
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+      isReserved: score < 3,
+    });
+  }
+
+  return slots;
 }
 
 export function getMockPreview(payload: {
@@ -123,14 +185,24 @@ export function getMockPreview(payload: {
   endAt: string;
 }): ReservationPreview {
   const server = mockServers.find((s) => s.id === payload.serverId) || mockServers[0];
-  const price = payload.unit === "HOURLY" ? server.hourlyPrice : server.dailyPrice;
+  const start = new Date(payload.startAt);
+  const end = new Date(payload.endAt);
+
+  let totalAmount = 0;
+  if (payload.unit === "HOURLY") {
+    const hours = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60)));
+    totalAmount = hours * server.hourlyPrice;
+  } else {
+    const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    totalAmount = days * server.dailyPrice;
+  }
 
   return {
     serverId: payload.serverId,
     unit: payload.unit,
     startAt: payload.startAt,
     endAt: payload.endAt,
-    totalAmount: price,
+    totalAmount,
     currency: "IRR",
   };
 }

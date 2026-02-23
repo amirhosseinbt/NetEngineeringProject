@@ -110,6 +110,7 @@ module.exports = mod;
 var { g: global, d: __dirname } = __turbopack_context__;
 {
 __turbopack_context__.s({
+    "getMockMonthAvailability": (()=>getMockMonthAvailability),
     "getMockPreview": (()=>getMockPreview),
     "getMockTimeSlots": (()=>getMockTimeSlots),
     "mockAdminReservations": (()=>mockAdminReservations),
@@ -211,58 +212,84 @@ const mockStats = {
     serversCount: 3,
     purchasesCount: 2
 };
-function getMockTimeSlots(unit) {
-    if (unit === "DAILY") {
+function pad2(value) {
+    return value.toString().padStart(2, "0");
+}
+function monthLength(year, month) {
+    return new Date(year, month, 0).getDate();
+}
+function seeded(serverId, year, month, day) {
+    return (serverId * 17 + year * 3 + month * 11 + day * 7) % 10;
+}
+function getMockMonthAvailability(params) {
+    const [yearStr, monthStr] = params.month.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const days = monthLength(year, month);
+    const result = [];
+    for(let day = 1; day <= days; day += 1){
+        const score = seeded(params.serverId, year, month, day);
+        let status = "available";
+        if (params.unit === "DAILY") {
+            status = score < 2 ? "reserved" : "available";
+        } else {
+            status = score < 2 ? "reserved" : score < 5 ? "partial" : "available";
+        }
+        result.push({
+            date: `${year}-${pad2(month)}-${pad2(day)}`,
+            status
+        });
+    }
+    return result;
+}
+function getMockTimeSlots(params) {
+    if (params.unit === "DAILY") {
+        const start = new Date(`${params.date}T00:00:00`);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 1);
         return [
             {
-                startAt: "2026-02-24T00:00:00.000Z",
-                endAt: "2026-02-25T00:00:00.000Z",
-                isReserved: true
-            },
-            {
-                startAt: "2026-02-25T00:00:00.000Z",
-                endAt: "2026-02-26T00:00:00.000Z",
-                isReserved: false
-            },
-            {
-                startAt: "2026-02-26T00:00:00.000Z",
-                endAt: "2026-02-27T00:00:00.000Z",
+                startAt: start.toISOString(),
+                endAt: end.toISOString(),
                 isReserved: false
             }
         ];
     }
-    return [
-        {
-            startAt: "2026-02-24T08:00:00.000Z",
-            endAt: "2026-02-24T10:00:00.000Z",
-            isReserved: true
-        },
-        {
-            startAt: "2026-02-24T10:00:00.000Z",
-            endAt: "2026-02-24T12:00:00.000Z",
-            isReserved: false
-        },
-        {
-            startAt: "2026-02-24T12:00:00.000Z",
-            endAt: "2026-02-24T14:00:00.000Z",
-            isReserved: false
-        },
-        {
-            startAt: "2026-02-24T14:00:00.000Z",
-            endAt: "2026-02-24T16:00:00.000Z",
-            isReserved: true
-        }
-    ];
+    const [yearStr, monthStr, dayStr] = params.date.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+    const day = Number(dayStr);
+    const slots = [];
+    for(let hour = 8; hour < 24; hour += 2){
+        const start = new Date(year, month - 1, day, hour, 0, 0);
+        const end = new Date(year, month - 1, day, hour + 2, 0, 0);
+        const score = (seeded(params.serverId, year, month, day) + hour) % 10;
+        slots.push({
+            startAt: start.toISOString(),
+            endAt: end.toISOString(),
+            isReserved: score < 3
+        });
+    }
+    return slots;
 }
 function getMockPreview(payload) {
     const server = mockServers.find((s)=>s.id === payload.serverId) || mockServers[0];
-    const price = payload.unit === "HOURLY" ? server.hourlyPrice : server.dailyPrice;
+    const start = new Date(payload.startAt);
+    const end = new Date(payload.endAt);
+    let totalAmount = 0;
+    if (payload.unit === "HOURLY") {
+        const hours = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60)));
+        totalAmount = hours * server.hourlyPrice;
+    } else {
+        const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+        totalAmount = days * server.dailyPrice;
+    }
     return {
         serverId: payload.serverId,
         unit: payload.unit,
         startAt: payload.startAt,
         endAt: payload.endAt,
-        totalAmount: price,
+        totalAmount,
         currency: "IRR"
     };
 }
@@ -286,6 +313,7 @@ const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false" || !API_BASE;
 const ENDPOINTS = {
     dashboardStats: "/dashboard/stats",
     serverList: "/hardware/servers",
+    serverMonthAvailability: (serverId)=>`/hardware/servers/${serverId}/calendar`,
     serverTimeSlots: (serverId)=>`/hardware/servers/${serverId}/timeslots`,
     reservationPreview: "/hardware/reservations/preview",
     reservationCheckout: "/hardware/reservations/checkout",
@@ -334,11 +362,27 @@ const hardwareApi = {
     },
     async getServerTimeSlots (serverId, params) {
         if (USE_MOCKS) {
-            void serverId;
-            void params.date;
-            return delay((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getMockTimeSlots"])(params.unit));
+            return delay((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getMockTimeSlots"])({
+                serverId,
+                unit: params.unit,
+                date: params.date
+            }));
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get(`${API_BASE}${ENDPOINTS.serverTimeSlots(serverId)}`, {
+            params,
+            headers: authHeader()
+        });
+        return response.data.data;
+    },
+    async getMonthAvailability (serverId, params) {
+        if (USE_MOCKS) {
+            return delay((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getMockMonthAvailability"])({
+                serverId,
+                unit: params.unit,
+                month: params.month
+            }));
+        }
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get(`${API_BASE}${ENDPOINTS.serverMonthAvailability(serverId)}`, {
             params,
             headers: authHeader()
         });
