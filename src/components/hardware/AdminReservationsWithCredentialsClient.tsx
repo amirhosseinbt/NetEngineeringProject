@@ -15,9 +15,137 @@ function formatDateTime(value: string): string {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
   });
+}
+
+function formatRemaining(endAt: string): string {
+  const end = new Date(endAt).getTime();
+  if (Number.isNaN(end)) return "-";
+  const diff = end - Date.now();
+  if (diff <= 0) return "پایان یافته";
+
+  const day = 1000 * 60 * 60 * 24;
+  const month = day * 30;
+  const months = Math.floor(diff / month);
+  const days = Math.floor((diff % month) / day);
+
+  if (months > 0) return `${months} ماه و ${days} روز`;
+  return `${Math.max(days, 1)} روز`;
+}
+
+function mask(value?: string | null): string {
+  if (!value) return "تنظیم نشده";
+  if (value.length <= 4) return value;
+  return `${value.slice(0, 2)}***${value.slice(-2)}`;
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat("fa-IR").format(value);
+}
+
+function formatReservationLabel(item: AdminReservation): string {
+  return `#${formatNumber(item.reservationId)} - ${item.userFullName}`;
+}
+
+function formatUserServer(item: AdminReservation): string {
+  return `${item.userFullName} / ${item.serverName}`;
+}
+
+function formatCredential(item: AdminReservation): string {
+  if (!item.username || !item.ipAddress) return "تنظیم نشده";
+  return `${item.username} @ ${item.ipAddress}`;
+}
+
+function formatTableDate(item: AdminReservation): string {
+  return `${formatDateTime(item.startAt)} تا ${formatDateTime(item.endAt)}`;
+}
+
+function formatSelectedMessage(item: AdminReservation | null): string {
+  if (!item) return "";
+  if (item.username && item.password && item.ipAddress) {
+    return `ورود فعلی: ${item.username} @ ${item.ipAddress} - رمز: ${mask(item.password)}`;
+  }
+  return "برای این رزرو هنوز اطلاعات ورود تنظیم نشده است.";
+}
+
+function toReservationId(value: string): number | null {
+  if (!value) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
+function normalizeReservationId(
+  list: AdminReservation[],
+  selectedReservationId: number | null
+): number | null {
+  if (list.length === 0) return null;
+  if (selectedReservationId === null) return list[0].reservationId;
+  const exists = list.some((item) => item.reservationId === selectedReservationId);
+  return exists ? selectedReservationId : list[0].reservationId;
+}
+
+function rowKey(item: AdminReservation, index: number): string {
+  return `${item.reservationId}-${index}`;
+}
+
+function sortReservations(list: AdminReservation[]): AdminReservation[] {
+  return [...list].sort((a, b) => b.reservationId - a.reservationId);
+}
+
+function resolveVisibleReservations(list: AdminReservation[], limit?: number): AdminReservation[] {
+  if (typeof limit === "number") return list.slice(0, limit);
+  return list;
+}
+
+function validateCredentialFields(ipAddress: string, username: string, password: string): boolean {
+  return ipAddress.trim().length > 0 && username.trim().length > 0 && password.trim().length > 0;
+}
+
+function emptyForm() {
+  return { ipAddress: "", username: "", password: "" };
+}
+
+function fillFormFromReservation(item: AdminReservation | null) {
+  if (!item) return emptyForm();
+  return {
+    ipAddress: item.ipAddress ?? "",
+    username: item.username ?? "",
+    password: item.password ?? "",
+  };
+}
+
+function isNoReservation(list: AdminReservation[]): boolean {
+  return list.length === 0;
+}
+
+function loadingPanel() {
+  return (
+    <div className="muted-panel mt-5 text-sm font-bold text-slate-700">در حال بارگذاری لیست رزروها...</div>
+  );
+}
+
+function emptyPanel() {
+  return (
+    <div className="muted-panel mt-5 text-sm font-bold text-slate-700">رزروی برای نمایش وجود ندارد.</div>
+  );
+}
+
+function currentCredentialLine(item: AdminReservation | null) {
+  const text = formatSelectedMessage(item);
+  if (!text) return null;
+  return <p className="mt-2 text-xs font-bold text-slate-500">{text}</p>;
+}
+
+function formTitle() {
+  return (
+    <div className="mb-3">
+      <p className="text-sm font-extrabold text-slate-700">ثبت اطلاعات ورود (فرم واحد)</p>
+      <p className="mt-1 text-xs font-bold text-slate-500">
+        رزرو را انتخاب کنید و IP، نام کاربری و رمز عبور را ثبت کنید.
+      </p>
+    </div>
+  );
 }
 
 export default function AdminReservationsWithCredentialsClient({
@@ -35,11 +163,9 @@ export default function AdminReservationsWithCredentialsClient({
   const refresh = async () => {
     setLoading(true);
     try {
-      const list = await hardwareApi.getAdminReservations();
+      const list = sortReservations(await hardwareApi.getAdminReservations());
       setReservations(list);
-      if (list.length > 0 && selectedReservationId === null) {
-        setSelectedReservationId(list[0].reservationId);
-      }
+      setSelectedReservationId((prev) => normalizeReservationId(list, prev));
     } catch (error) {
       console.log(error);
     } finally {
@@ -51,10 +177,7 @@ export default function AdminReservationsWithCredentialsClient({
     refresh();
   }, []);
 
-  const visibleReservations = useMemo(
-    () => (typeof limit === "number" ? reservations.slice(0, limit) : reservations),
-    [limit, reservations]
-  );
+  const visibleReservations = useMemo(() => resolveVisibleReservations(reservations, limit), [limit, reservations]);
 
   const selectedReservation = useMemo(
     () =>
@@ -65,21 +188,16 @@ export default function AdminReservationsWithCredentialsClient({
   );
 
   useEffect(() => {
-    if (!selectedReservation) {
-      setIpAddress("");
-      setUsername("");
-      setPassword("");
-      return;
-    }
-    setIpAddress(selectedReservation.ipAddress ?? "");
-    setUsername(selectedReservation.username ?? "");
-    setPassword(selectedReservation.password ?? "");
+    const form = fillFormFromReservation(selectedReservation);
+    setIpAddress(form.ipAddress);
+    setUsername(form.username);
+    setPassword(form.password);
     setMessage("");
   }, [selectedReservation]);
 
   const submitCredentials = async () => {
     if (!selectedReservationId) return;
-    if (!ipAddress.trim() || !username.trim() || !password.trim()) {
+    if (!validateCredentialFields(ipAddress, username, password)) {
       setMessage("لطفا IP، نام کاربری و رمز عبور را کامل وارد کنید.");
       return;
     }
@@ -102,34 +220,23 @@ export default function AdminReservationsWithCredentialsClient({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="muted-panel mt-5 text-sm font-bold text-slate-700">در حال بارگذاری لیست رزروها...</div>
-    );
-  }
+  if (loading) return loadingPanel();
 
-  if (visibleReservations.length === 0) {
-    return (
-      <div className="muted-panel mt-5 text-sm font-bold text-slate-700">رزروی برای نمایش وجود ندارد.</div>
-    );
-  }
+  if (isNoReservation(visibleReservations)) return emptyPanel();
 
   return (
     <div className="mt-5 grid gap-3">
-      <div className="muted-panel">
-        <p className="text-sm font-extrabold text-[#1f2f67]">ثبت اطلاعات ورود (فرم واحد)</p>
-        <p className="mt-1 text-xs font-bold text-slate-500">
-          رزرو را انتخاب کنید و اطلاعات ورود را ثبت یا ویرایش کنید.
-        </p>
-        <div className="mt-3 grid gap-2">
+      <div className="rounded-2xl border border-slate-300 bg-[#ececec] p-4">
+        {formTitle()}
+        <div className="grid gap-2 md:grid-cols-2">
           <select
             className="input-shell"
             value={selectedReservationId ?? ""}
-            onChange={(event) => setSelectedReservationId(Number(event.target.value))}
+            onChange={(event) => setSelectedReservationId(toReservationId(event.target.value))}
           >
             {visibleReservations.map((item) => (
               <option key={item.reservationId} value={item.reservationId}>
-                رزرو #{item.reservationId} - {item.userFullName}
+                {formatReservationLabel(item)}
               </option>
             ))}
           </select>
@@ -151,6 +258,8 @@ export default function AdminReservationsWithCredentialsClient({
             className="input-shell"
             placeholder="رمز عبور"
           />
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={submitCredentials}
@@ -161,30 +270,31 @@ export default function AdminReservationsWithCredentialsClient({
           </button>
           {message ? <p className="text-xs font-bold text-slate-600">{message}</p> : null}
         </div>
+        {currentCredentialLine(selectedReservation)}
       </div>
 
-      {visibleReservations.map((item, index) => (
-        <div key={item.reservationId} className="muted-panel relative">
-          <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-700">
-            {index + 1}
-          </span>
-
-          <div className="pr-10">
-            <p className="text-base font-extrabold text-[#1f2f67]">رزرو #{item.reservationId}</p>
-            <p className="mt-1 text-sm font-bold text-slate-600">کاربر: {item.userFullName}</p>
-            <p className="text-sm font-bold text-slate-600">سرور: {item.serverName}</p>
-            <p className="text-sm font-bold text-slate-500">
-              {formatDateTime(item.startAt)} تا {formatDateTime(item.endAt)}
-            </p>
-            <p className="mt-2 text-xs font-bold text-slate-500">
-              ورود:{" "}
-              {item.username && item.ipAddress
-                ? `${item.username} @ ${item.ipAddress}`
-                : "هنوز تنظیم نشده"}
-            </p>
-          </div>
-        </div>
-      ))}
+      <div className="admin-table-shell">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>کاربر / سرور</th>
+              <th>بازه رزرو</th>
+              <th>زمان باقی مانده</th>
+              <th>اطلاعات ورود</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleReservations.map((item, index) => (
+              <tr key={rowKey(item, index)}>
+                <td>{formatUserServer(item)}</td>
+                <td>{formatTableDate(item)}</td>
+                <td>{formatRemaining(item.endAt)}</td>
+                <td>{formatCredential(item)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

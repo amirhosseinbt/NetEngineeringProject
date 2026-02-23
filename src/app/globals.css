@@ -211,6 +211,70 @@
   .action-tile:hover::after {
     @apply bg-[rgba(36,75,197,0.14)];
   }
+
+  .admin-shell {
+    @apply min-h-screen w-full bg-[#e9edf5] p-4 md:p-6;
+  }
+
+  .admin-grid {
+    @apply mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6;
+  }
+
+  .admin-main-card {
+    @apply rounded-2xl border border-white/60 bg-[#f1f1f1] p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:p-6 lg:p-8;
+  }
+
+  .admin-side-card {
+    @apply flex min-h-[620px] flex-col rounded-2xl border border-white/60 bg-[#f1f1f1] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)];
+  }
+
+  .admin-search-box {
+    @apply flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-[#e9e9e9] px-3;
+  }
+
+  .admin-search-input {
+    @apply h-full w-full bg-transparent text-sm font-bold text-slate-600 outline-none placeholder:text-slate-500;
+  }
+
+  .admin-side-link {
+    @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-600 transition hover:bg-[#e6e6e6];
+  }
+
+  .admin-side-link-active {
+    @apply bg-[#e3e3e3] text-slate-800;
+  }
+
+  .admin-side-logout {
+    @apply mt-6 flex items-center justify-between rounded-xl bg-[#e3e3e3] px-4 py-3 text-base font-bold text-slate-700 transition hover:brightness-95;
+  }
+
+  .admin-section-title {
+    @apply text-xl font-extrabold text-slate-700 md:text-2xl;
+  }
+
+  .admin-subtitle {
+    @apply mt-1 text-sm font-bold text-slate-500;
+  }
+
+  .admin-table-shell {
+    @apply mt-5 overflow-x-auto rounded-2xl border border-slate-300 bg-[#efefef];
+  }
+
+  .admin-table {
+    @apply w-full min-w-[620px] text-right text-sm font-bold text-slate-700;
+  }
+
+  .admin-table th {
+    @apply border-b border-slate-300 px-4 py-3 text-sm text-slate-600;
+  }
+
+  .admin-table td {
+    @apply border-b border-slate-300 px-4 py-3;
+  }
+
+  .admin-table tr:last-child td {
+    @apply border-b-0;
+  }
 }
 
 input::-webkit-outer-spin-button,

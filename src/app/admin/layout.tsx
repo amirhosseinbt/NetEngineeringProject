@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
-import AdminTopBar from "@/components/admin/AdminTopBar";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="w-full min-h-screen bg-white">
-      <AdminTopBar />
-      {children}
+    <div className="admin-shell">
+      <div className="admin-grid">
+        <main className="admin-main-card">{children}</main>
+        <AdminSidebar />
+      </div>
     </div>
   );
 }

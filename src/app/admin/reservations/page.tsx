@@ -2,12 +2,10 @@ import AdminReservationsWithCredentialsClient from "@/components/hardware/AdminR
 
 export default function AdminReservationsPage() {
   return (
-    <div className="page-shell">
-      <div className="content-shell">
-        <h1 className="section-title">لیست رزروها</h1>
-        <p className="mt-2 text-sm text-slate-600">رزروها به‌صورت لیستی نمایش داده می‌شوند.</p>
-        <AdminReservationsWithCredentialsClient />
-      </div>
+    <div>
+      <h1 className="admin-section-title">سفارش ها</h1>
+      <p className="admin-subtitle">همه رزروها به صورت یکپارچه نمایش داده می‌شوند.</p>
+      <AdminReservationsWithCredentialsClient />
     </div>
   );
 }
