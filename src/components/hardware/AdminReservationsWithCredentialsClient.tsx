@@ -25,28 +25,21 @@ export default function AdminReservationsWithCredentialsClient({
 }: AdminReservationsWithCredentialsClientProps) {
   const [reservations, setReservations] = useState<AdminReservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [savingId, setSavingId] = useState<number | null>(null);
-  const [messageByReservation, setMessageByReservation] = useState<Record<number, string>>({});
-  const [formByReservation, setFormByReservation] = useState<
-    Record<number, { ipAddress: string; username: string; password: string }>
-  >({});
+  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
+  const [ipAddress, setIpAddress] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const refresh = async () => {
     setLoading(true);
     try {
       const list = await hardwareApi.getAdminReservations();
       setReservations(list);
-      setFormByReservation((previous) => {
-        const next = { ...previous };
-        list.forEach((item) => {
-          next[item.reservationId] = {
-            ipAddress: previous[item.reservationId]?.ipAddress ?? item.ipAddress ?? "",
-            username: previous[item.reservationId]?.username ?? item.username ?? "",
-            password: previous[item.reservationId]?.password ?? item.password ?? "",
-          };
-        });
-        return next;
-      });
+      if (list.length > 0 && selectedReservationId === null) {
+        setSelectedReservationId(list[0].reservationId);
+      }
     } catch (error) {
       console.log(error);
     } finally {
@@ -63,54 +56,49 @@ export default function AdminReservationsWithCredentialsClient({
     [limit, reservations]
   );
 
-  const updateFormField = (
-    reservationId: number,
-    field: "ipAddress" | "username" | "password",
-    value: string
-  ) => {
-    setFormByReservation((previous) => ({
-      ...previous,
-      [reservationId]: {
-        ipAddress: previous[reservationId]?.ipAddress ?? "",
-        username: previous[reservationId]?.username ?? "",
-        password: previous[reservationId]?.password ?? "",
-        [field]: value,
-      },
-    }));
-    setMessageByReservation((previous) => ({ ...previous, [reservationId]: "" }));
-  };
+  const selectedReservation = useMemo(
+    () =>
+      reservations.find((item) => item.reservationId === selectedReservationId) ??
+      visibleReservations.find((item) => item.reservationId === selectedReservationId) ??
+      null,
+    [reservations, selectedReservationId, visibleReservations]
+  );
 
-  const submitCredentials = async (reservationId: number) => {
-    const form = formByReservation[reservationId] ?? { ipAddress: "", username: "", password: "" };
-    if (!form.ipAddress.trim() || !form.username.trim() || !form.password.trim()) {
-      setMessageByReservation((previous) => ({
-        ...previous,
-        [reservationId]: "لطفا IP، نام کاربری و رمز عبور را کامل وارد کنید.",
-      }));
+  useEffect(() => {
+    if (!selectedReservation) {
+      setIpAddress("");
+      setUsername("");
+      setPassword("");
+      return;
+    }
+    setIpAddress(selectedReservation.ipAddress ?? "");
+    setUsername(selectedReservation.username ?? "");
+    setPassword(selectedReservation.password ?? "");
+    setMessage("");
+  }, [selectedReservation]);
+
+  const submitCredentials = async () => {
+    if (!selectedReservationId) return;
+    if (!ipAddress.trim() || !username.trim() || !password.trim()) {
+      setMessage("لطفا IP، نام کاربری و رمز عبور را کامل وارد کنید.");
       return;
     }
 
     try {
-      setSavingId(reservationId);
+      setSaving(true);
       await hardwareApi.assignServiceCredentials({
-        reservationId,
-        ipAddress: form.ipAddress.trim(),
-        username: form.username.trim(),
-        password: form.password.trim(),
+        reservationId: selectedReservationId,
+        ipAddress: ipAddress.trim(),
+        username: username.trim(),
+        password: password.trim(),
       });
-      setMessageByReservation((previous) => ({
-        ...previous,
-        [reservationId]: "اطلاعات ورود با موفقیت ثبت شد.",
-      }));
+      setMessage("اطلاعات ورود با موفقیت ثبت شد.");
       await refresh();
     } catch (error) {
       console.log(error);
-      setMessageByReservation((previous) => ({
-        ...previous,
-        [reservationId]: "ثبت اطلاعات ورود ناموفق بود. دوباره تلاش کنید.",
-      }));
+      setMessage("ثبت اطلاعات ورود ناموفق بود. دوباره تلاش کنید.");
     } finally {
-      setSavingId(null);
+      setSaving(false);
     }
   };
 
@@ -128,58 +116,72 @@ export default function AdminReservationsWithCredentialsClient({
 
   return (
     <div className="mt-5 grid gap-3">
+      <div className="muted-panel">
+        <p className="text-sm font-extrabold text-[#1f2f67]">ثبت اطلاعات ورود (فرم واحد)</p>
+        <p className="mt-1 text-xs font-bold text-slate-500">
+          رزرو را انتخاب کنید و اطلاعات ورود را ثبت یا ویرایش کنید.
+        </p>
+        <div className="mt-3 grid gap-2">
+          <select
+            className="input-shell"
+            value={selectedReservationId ?? ""}
+            onChange={(event) => setSelectedReservationId(Number(event.target.value))}
+          >
+            {visibleReservations.map((item) => (
+              <option key={item.reservationId} value={item.reservationId}>
+                رزرو #{item.reservationId} - {item.userFullName}
+              </option>
+            ))}
+          </select>
+          <input
+            value={ipAddress}
+            onChange={(event) => setIpAddress(event.target.value)}
+            className="input-shell"
+            placeholder="IP سرور"
+          />
+          <input
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="input-shell"
+            placeholder="نام کاربری"
+          />
+          <input
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="input-shell"
+            placeholder="رمز عبور"
+          />
+          <button
+            type="button"
+            onClick={submitCredentials}
+            disabled={saving || !selectedReservationId}
+            className="primary-btn w-fit disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "در حال ثبت..." : "ذخیره اطلاعات ورود"}
+          </button>
+          {message ? <p className="text-xs font-bold text-slate-600">{message}</p> : null}
+        </div>
+      </div>
+
       {visibleReservations.map((item, index) => (
         <div key={item.reservationId} className="muted-panel relative">
           <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-bold text-slate-700">
             {index + 1}
           </span>
 
-          <div className="pl-10">
+          <div className="pr-10">
             <p className="text-base font-extrabold text-[#1f2f67]">رزرو #{item.reservationId}</p>
             <p className="mt-1 text-sm font-bold text-slate-600">کاربر: {item.userFullName}</p>
             <p className="text-sm font-bold text-slate-600">سرور: {item.serverName}</p>
             <p className="text-sm font-bold text-slate-500">
               {formatDateTime(item.startAt)} تا {formatDateTime(item.endAt)}
             </p>
-
-            <div className="mt-4 grid gap-2 rounded-xl border border-slate-200 bg-white/80 p-3">
-              <p className="text-xs font-extrabold text-slate-500">ثبت اطلاعات ورود این رزرو</p>
-              <input
-                value={formByReservation[item.reservationId]?.ipAddress ?? ""}
-                onChange={(event) =>
-                  updateFormField(item.reservationId, "ipAddress", event.target.value)
-                }
-                className="input-shell"
-                placeholder="IP سرور"
-              />
-              <input
-                value={formByReservation[item.reservationId]?.username ?? ""}
-                onChange={(event) =>
-                  updateFormField(item.reservationId, "username", event.target.value)
-                }
-                className="input-shell"
-                placeholder="نام کاربری"
-              />
-              <input
-                value={formByReservation[item.reservationId]?.password ?? ""}
-                onChange={(event) =>
-                  updateFormField(item.reservationId, "password", event.target.value)
-                }
-                className="input-shell"
-                placeholder="رمز عبور"
-              />
-              <button
-                type="button"
-                onClick={() => submitCredentials(item.reservationId)}
-                disabled={savingId === item.reservationId}
-                className="primary-btn w-fit disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {savingId === item.reservationId ? "در حال ثبت..." : "ذخیره اطلاعات ورود"}
-              </button>
-              {messageByReservation[item.reservationId] ? (
-                <p className="text-xs font-bold text-slate-600">{messageByReservation[item.reservationId]}</p>
-              ) : null}
-            </div>
+            <p className="mt-2 text-xs font-bold text-slate-500">
+              ورود:{" "}
+              {item.username && item.ipAddress
+                ? `${item.username} @ ${item.ipAddress}`
+                : "هنوز تنظیم نشده"}
+            </p>
           </div>
         </div>
       ))}
