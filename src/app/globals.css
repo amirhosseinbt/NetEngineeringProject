@@ -124,9 +124,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    background-image:
-      radial-gradient(circle at 100% 0%, rgba(36, 75, 197, 0.1) 0, rgba(36, 75, 197, 0) 34%),
-      radial-gradient(circle at 0% 100%, rgba(27, 78, 202, 0.08) 0, rgba(27, 78, 202, 0) 38%);
+    background-color: var(--surface-100);
   }
 }
 
@@ -136,11 +134,11 @@
   }
 
   .content-shell {
-    @apply mx-auto w-full max-w-6xl rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-6;
+    @apply mx-auto w-full max-w-6xl rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] md:p-6;
   }
 
   .muted-panel {
-    @apply rounded-xl border border-slate-200/80 bg-[var(--surface-100)] p-4 shadow-[0_6px_20px_rgba(15,23,42,0.06)];
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-[0_6px_20px_rgba(15,23,42,0.06)];
   }
 
   .table-shell {

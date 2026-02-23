@@ -54,7 +54,7 @@ export default function HomeStats() {
   ];
 
   return (
-    <div className="page-shell pb-4">
+    <div className="mb-4">
       <div className="dashboard-hero">
         <div className="relative z-10">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

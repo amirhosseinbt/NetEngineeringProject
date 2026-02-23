@@ -17,7 +17,7 @@ export default function MyServicesClient() {
 
   return (
     <div className="page-shell">
-      <div className="content-shell">
+      <div className="mx-auto w-full max-w-6xl">
         <h1 className="section-title">سرویس های خریداری شده من</h1>
         <p className="mt-2 text-sm text-slate-600">
           لیست سرویس های خریداری شده به همراه وضعیت اطلاعات ورود.
