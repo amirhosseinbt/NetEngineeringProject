@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ChevronLeft, KeySquare, ServerCog, ShoppingBag, Users } from "lucide-react";
+import { ChevronLeft, ServerCog, Users } from "lucide-react";
 import HomeStats from "@/components/home/HomeStats";
+import AdminReservationsWithCredentialsClient from "@/components/hardware/AdminReservationsWithCredentialsClient";
 
 const links = [
   {
@@ -14,18 +15,6 @@ const links = [
     label: "لیست کاربران",
     description: "بررسی کاربران ثبت‌نام‌شده و اطلاعات حساب",
     icon: Users,
-  },
-  {
-    href: "/admin/reservations",
-    label: "لیست رزروها",
-    description: "نمایش سفارش‌ها، زمان رزرو و وضعیت سرویس",
-    icon: ShoppingBag,
-  },
-  {
-    href: "/admin/credentials",
-    label: "تخصیص اطلاعات ورود",
-    description: "تنظیم IP، نام کاربری و رمز عبور هر سرویس",
-    icon: KeySquare,
   },
 ];
 
@@ -52,6 +41,12 @@ export default function AdminPage() {
               <p className="relative z-10 mt-1 text-xs font-bold text-slate-500">{item.description}</p>
             </Link>
           ))}
+        </div>
+
+        <div className="mt-6">
+          <h2 className="text-lg font-extrabold text-[#1f2f67]">همه رزروها</h2>
+          <p className="mt-1 text-sm font-bold text-slate-500">تمام رزروها در همین صفحه اصلی ادمین نمایش داده می‌شود.</p>
+          <AdminReservationsWithCredentialsClient />
         </div>
       </div>
     </div>

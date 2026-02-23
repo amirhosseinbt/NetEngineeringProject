@@ -66,4 +66,7 @@ export interface AdminReservation {
   serverName: string;
   startAt: string;
   endAt: string;
+  ipAddress?: string | null;
+  username?: string | null;
+  password?: string | null;
 }

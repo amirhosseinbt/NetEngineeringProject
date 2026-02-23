@@ -46,6 +46,7 @@ function authHeader() {
 }
 
 const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
+const MOCK_MY_SERVICES_STORAGE_KEY = "mock_my_services";
 
 function delay<T>(data: T, ms = 250): Promise<T> {
   return new Promise((resolve) => {
@@ -88,6 +89,28 @@ function getMockServersStore(): HardwareServer[] {
 function setMockServersStore(servers: HardwareServer[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(servers));
+}
+
+function getMockMyServicesStore(): PurchasedService[] {
+  if (typeof window === "undefined") return [...mockMyServices];
+  const raw = localStorage.getItem(MOCK_MY_SERVICES_STORAGE_KEY);
+  if (!raw) {
+    localStorage.setItem(MOCK_MY_SERVICES_STORAGE_KEY, JSON.stringify(mockMyServices));
+    return [...mockMyServices];
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [...mockMyServices];
+    return parsed as PurchasedService[];
+  } catch {
+    return [...mockMyServices];
+  }
+}
+
+function setMockMyServicesStore(services: PurchasedService[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(MOCK_MY_SERVICES_STORAGE_KEY, JSON.stringify(services));
 }
 
 export const hardwareApi = {
@@ -169,7 +192,7 @@ export const hardwareApi = {
   },
 
   async getMyServices(): Promise<PurchasedService[]> {
-    if (USE_MOCKS) return delay(mockMyServices);
+    if (USE_MOCKS) return delay(getMockMyServicesStore());
 
     const response = await axios.get<{ data: PurchasedService[] }>(`${API_BASE}${ENDPOINTS.userServices}`, {
       headers: authHeader(),
@@ -252,7 +275,23 @@ export const hardwareApi = {
   },
 
   async getAdminReservations(): Promise<AdminReservation[]> {
-    if (USE_MOCKS) return delay(mockAdminReservations);
+    if (USE_MOCKS) {
+      const servicesByReservation = new Map(
+        getMockMyServicesStore().map((item) => [item.reservationId, item] as const)
+      );
+
+      const mapped = mockAdminReservations.map((reservation) => {
+        const credential = servicesByReservation.get(reservation.reservationId);
+        return {
+          ...reservation,
+          ipAddress: credential?.ipAddress ?? null,
+          username: credential?.username ?? null,
+          password: credential?.password ?? null,
+        };
+      });
+
+      return delay(mapped);
+    }
 
     const response = await axios.get<{ data: AdminReservation[] }>(
       `${API_BASE}${ENDPOINTS.adminReservations}`,
@@ -268,7 +307,30 @@ export const hardwareApi = {
     ipAddress: string;
   }): Promise<{ success: boolean }> {
     if (USE_MOCKS) {
-      void payload;
+      const services = getMockMyServicesStore();
+      const index = services.findIndex((item) => item.reservationId === payload.reservationId);
+
+      if (index === -1) {
+        services.push({
+          reservationId: payload.reservationId,
+          serverName: `Reservation ${payload.reservationId}`,
+          startAt: new Date().toISOString(),
+          endAt: new Date().toISOString(),
+          totalAmount: 0,
+          ipAddress: payload.ipAddress,
+          username: payload.username,
+          password: payload.password,
+        });
+      } else {
+        services[index] = {
+          ...services[index],
+          ipAddress: payload.ipAddress,
+          username: payload.username,
+          password: payload.password,
+        };
+      }
+
+      setMockMyServicesStore(services);
       return delay({ success: true });
     }
 
