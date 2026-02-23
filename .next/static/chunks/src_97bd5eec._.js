@@ -221,40 +221,44 @@ var _s = __turbopack_context__.k.signature();
 'use client';
 ;
 ;
+const publicRoutes = new Set([
+    "/login",
+    "/register"
+]);
 function AuthToken({ children }) {
     _s();
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "AuthToken.useEffect": ()=>{
             const token = localStorage.getItem("token");
-        // if (!token) router.push("/login");
+            const isPublicRoute = publicRoutes.has(pathname);
+            if (!token && !isPublicRoute) {
+                router.push("/login");
+                return;
+            }
+            if (token && isPublicRoute) {
+                router.push("/");
+                return;
+            }
+            const expiration = localStorage.getItem('token_expiration');
+            if (token && expiration && new Date() > new Date(expiration)) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('token_expiration');
+                localStorage.removeItem('is_vip');
+                router.push('/login');
+            }
         }
     }["AuthToken.useEffect"], [
+        pathname,
         router
     ]);
-    // Add this in your _app.tsx or main layout component
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "AuthToken.useEffect": ()=>{
-        // const checkTokenExpiration = () => {
-        //     const expiration = localStorage.getItem('token_expiration');
-        //     if (expiration && new Date() > new Date(expiration)) {
-        //         localStorage.removeItem('token');
-        //         localStorage.removeItem('token_expiration');
-        //         localStorage.removeItem('is_vip');
-        //         router.push('/login');
-        //     }
-        // };
-        // // Check on mount and every minute
-        // checkTokenExpiration();
-        // const interval = setInterval(checkTokenExpiration, 60000);
-        // return () => clearInterval(interval);
-        }
-    }["AuthToken.useEffect"], []);
     return children;
 }
-_s(AuthToken, "TvQOAa6MuxS5wkANqefpxaThEc4=", false, function() {
+_s(AuthToken, "o5ZI+SkIudo7k8HXWSgHRZPlXUg=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"]
     ];
 });
 _c = AuthToken;

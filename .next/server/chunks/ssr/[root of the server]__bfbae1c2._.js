@@ -221,30 +221,35 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navi
 'use client';
 ;
 ;
+const publicRoutes = new Set([
+    "/login",
+    "/register"
+]);
 function AuthToken({ children }) {
     const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const token = localStorage.getItem("token");
-    // if (!token) router.push("/login");
+        const isPublicRoute = publicRoutes.has(pathname);
+        if (!token && !isPublicRoute) {
+            router.push("/login");
+            return;
+        }
+        if (token && isPublicRoute) {
+            router.push("/");
+            return;
+        }
+        const expiration = localStorage.getItem('token_expiration');
+        if (token && expiration && new Date() > new Date(expiration)) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('token_expiration');
+            localStorage.removeItem('is_vip');
+            router.push('/login');
+        }
     }, [
+        pathname,
         router
     ]);
-    // Add this in your _app.tsx or main layout component
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-    // const checkTokenExpiration = () => {
-    //     const expiration = localStorage.getItem('token_expiration');
-    //     if (expiration && new Date() > new Date(expiration)) {
-    //         localStorage.removeItem('token');
-    //         localStorage.removeItem('token_expiration');
-    //         localStorage.removeItem('is_vip');
-    //         router.push('/login');
-    //     }
-    // };
-    // // Check on mount and every minute
-    // checkTokenExpiration();
-    // const interval = setInterval(checkTokenExpiration, 60000);
-    // return () => clearInterval(interval);
-    }, []);
     return children;
 }
 }}),

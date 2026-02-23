@@ -1,36 +1,35 @@
 'use client'
-import React from "react";
-import {useEffect} from "react";
-import {useRouter} from "next/navigation";
+import React, { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-export default function AuthToken({children}: { children: React.ReactNode }) {
-    const router = useRouter();
+const publicRoutes = new Set(["/login", "/register"]);
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        // if (!token) router.push("/login");
-    }, [router])
+export default function AuthToken({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
 
-    // Add this in your _app.tsx or main layout component
-    useEffect(() => {
-        // const checkTokenExpiration = () => {
-        //     const expiration = localStorage.getItem('token_expiration');
-        //     if (expiration && new Date() > new Date(expiration)) {
-        //         localStorage.removeItem('token');
-        //         localStorage.removeItem('token_expiration');
-        //         localStorage.removeItem('is_vip');
-        //         router.push('/login');
-        //     }
-        // };
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const isPublicRoute = publicRoutes.has(pathname);
 
-        // // Check on mount and every minute
-        // checkTokenExpiration();
-        // const interval = setInterval(checkTokenExpiration, 60000);
-        // return () => clearInterval(interval);
-    }, []);
+    if (!token && !isPublicRoute) {
+      router.push("/login");
+      return;
+    }
 
+    if (token && isPublicRoute) {
+      router.push("/");
+      return;
+    }
 
-    return children
+    const expiration = localStorage.getItem('token_expiration');
+    if (token && expiration && new Date() > new Date(expiration)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('token_expiration');
+      localStorage.removeItem('is_vip');
+      router.push('/login');
+    }
+  }, [pathname, router]);
 
-
+  return children;
 }
