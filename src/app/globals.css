@@ -213,23 +213,28 @@
   }
 
   .admin-shell {
-    @apply min-h-screen w-full bg-[#e9edf5] p-4 md:p-6;
+    direction: rtl;
+    @apply min-h-screen w-full p-4 md:p-6;
+    background:
+      radial-gradient(1200px 460px at 110% -10%, rgba(36, 75, 197, 0.16), transparent 60%),
+      radial-gradient(900px 360px at -10% 0%, rgba(29, 60, 161, 0.12), transparent 58%),
+      linear-gradient(180deg, #eef3ff 0%, #f5f8ff 42%, #eef3ff 100%);
   }
 
   .admin-grid {
-    @apply mx-auto grid w-full max-w-6xl grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6;
+    @apply grid w-full grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6;
   }
 
   .admin-main-card {
-    @apply rounded-2xl border border-white/60 bg-[#f1f1f1] p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:p-6 lg:p-8;
+    @apply min-h-[calc(100vh-3rem)] rounded-2xl border border-[#d9e4ff] bg-white/88 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-[2px] md:p-6 lg:p-8;
   }
 
   .admin-side-card {
-    @apply flex min-h-[620px] flex-col rounded-2xl border border-white/60 bg-[#f1f1f1] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)];
+    @apply flex min-h-[calc(100vh-3rem)] flex-col rounded-2xl border border-[#d9e4ff] bg-white/88 p-5 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-[2px];
   }
 
   .admin-search-box {
-    @apply flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-[#e9e9e9] px-3;
+    @apply flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-[#f3f6ff] px-3;
   }
 
   .admin-search-input {
@@ -237,15 +242,15 @@
   }
 
   .admin-side-link {
-    @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-600 transition hover:bg-[#e6e6e6];
+    @apply flex items-center justify-between rounded-xl px-4 py-3 text-base font-bold text-slate-600 transition hover:bg-[#edf2ff];
   }
 
   .admin-side-link-active {
-    @apply bg-[#e3e3e3] text-slate-800;
+    @apply bg-[#e7efff] text-[#244BC5];
   }
 
   .admin-side-logout {
-    @apply mt-6 flex items-center justify-between rounded-xl bg-[#e3e3e3] px-4 py-3 text-base font-bold text-slate-700 transition hover:brightness-95;
+    @apply mt-6 flex items-center justify-between rounded-xl bg-[#edf2ff] px-4 py-3 text-base font-bold text-[#244BC5] transition hover:brightness-95;
   }
 
   .admin-section-title {
@@ -257,7 +262,7 @@
   }
 
   .admin-table-shell {
-    @apply mt-5 overflow-x-auto rounded-2xl border border-slate-300 bg-[#efefef];
+    @apply mt-5 overflow-x-auto rounded-2xl border border-[#d5def6] bg-[#f8faff];
   }
 
   .admin-table {
@@ -274,6 +279,13 @@
 
   .admin-table tr:last-child td {
     @apply border-b-0;
+  }
+
+  .admin-credential-card {
+    @apply rounded-2xl border border-[#cfdcff] p-4 shadow-[0_14px_34px_rgba(36,75,197,0.12)] md:p-5;
+    background:
+      radial-gradient(460px 180px at 100% -20%, rgba(36, 75, 197, 0.16), transparent 65%),
+      linear-gradient(160deg, #f8fbff 0%, #eef3ff 56%, #eaf0ff 100%);
   }
 }
 

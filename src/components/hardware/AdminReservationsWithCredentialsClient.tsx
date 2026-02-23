@@ -226,7 +226,7 @@ export default function AdminReservationsWithCredentialsClient({
 
   return (
     <div className="mt-5 grid gap-3">
-      <div className="rounded-2xl border border-slate-300 bg-[#ececec] p-4">
+      <div className="admin-credential-card">
         {formTitle()}
         <div className="grid gap-2 md:grid-cols-2">
           <select

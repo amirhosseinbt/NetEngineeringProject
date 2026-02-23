@@ -1,11 +1,9 @@
-import AdminReservationsWithCredentialsClient from "@/components/hardware/AdminReservationsWithCredentialsClient";
+import HomeStats from "@/components/home/HomeStats";
 
 export default function AdminPage() {
   return (
     <div>
-      <h1 className="admin-section-title">لیست سفارش‌ها</h1>
-      <p className="admin-subtitle">تمام رزروها و ثبت اطلاعات ورود در همین صفحه قابل مدیریت است.</p>
-      <AdminReservationsWithCredentialsClient />
+      <HomeStats />
     </div>
   );
 }
