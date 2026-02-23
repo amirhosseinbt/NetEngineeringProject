@@ -1,0 +1,13 @@
+{
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/my-services/page": "app/my-services/page.js",
+  "/hardware/page": "app/hardware/page.js",
+  "/hardware/reserve/[serverId]/page": "app/hardware/reserve/[serverId]/page.js",
+  "/hardware/checkout/[reservationId]/page": "app/hardware/checkout/[reservationId]/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/servers/page": "app/admin/servers/page.js",
+  "/admin/credentials/page": "app/admin/credentials/page.js",
+  "/admin/users/page": "app/admin/users/page.js"
+}
