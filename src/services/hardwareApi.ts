@@ -1,4 +1,4 @@
-import axios from "axios";
+import { USE_MOCKS, authHeader, http } from "@/services/http";
 import {
   getMockMonthAvailability,
   getMockPreview,
@@ -24,9 +24,6 @@ import type {
   TimeSlot,
 } from "@/types/hardware";
 
-const API_BASE = process.env.NEXT_PUBLIC_URL;
-const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false" || !API_BASE;
-
 const ENDPOINTS = {
   dashboardStats: "/dashboard/stats",
   serverList: "/hardware/servers",
@@ -40,12 +37,6 @@ const ENDPOINTS = {
   adminReservations: "/admin/hardware/reservations",
   adminCredentials: "/admin/hardware/credentials",
 };
-
-function authHeader() {
-  return {
-    Authorization: typeof window !== "undefined" ? localStorage.getItem("token") : "",
-  };
-}
 
 const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
 const MOCK_MY_SERVICES_STORAGE_KEY = "mock_my_services";
@@ -181,7 +172,7 @@ export const hardwareApi = {
       return delay({ usersCount, serversCount, purchasesCount });
     }
 
-    const response = await axios.get<{ data: DashboardStats }>(`${API_BASE}${ENDPOINTS.dashboardStats}`, {
+    const response = await http.get<{ data: DashboardStats }>(`${ENDPOINTS.dashboardStats}`, {
       headers: authHeader(),
     });
     return response.data.data;
@@ -190,7 +181,7 @@ export const hardwareApi = {
   async getServers(params: { basis?: BuildBasis; cpu?: string; gpu?: string }): Promise<HardwareServer[]> {
     if (USE_MOCKS) return delay(applyServerFilters(getMockServersStore(), params));
 
-    const response = await axios.get<{ data: HardwareServer[] }>(`${API_BASE}${ENDPOINTS.serverList}`, {
+    const response = await http.get<{ data: HardwareServer[] }>(`${ENDPOINTS.serverList}`, {
       params,
       headers: authHeader(),
     });
@@ -202,7 +193,7 @@ export const hardwareApi = {
       return delay(getMockTimeSlots({ serverId, unit: params.unit, date: params.date }));
     }
 
-    const response = await axios.get<{ data: TimeSlot[] }>(`${API_BASE}${ENDPOINTS.serverTimeSlots(serverId)}`, {
+    const response = await http.get<{ data: TimeSlot[] }>(`${ENDPOINTS.serverTimeSlots(serverId)}`, {
       params,
       headers: authHeader(),
     });
@@ -217,8 +208,8 @@ export const hardwareApi = {
       return delay(getMockMonthAvailability({ serverId, unit: params.unit, month: params.month }));
     }
 
-    const response = await axios.get<{ data: CalendarDayAvailability[] }>(
-      `${API_BASE}${ENDPOINTS.serverMonthAvailability(serverId)}`,
+    const response = await http.get<{ data: CalendarDayAvailability[] }>(
+      `${ENDPOINTS.serverMonthAvailability(serverId)}`,
       {
         params,
         headers: authHeader(),
@@ -235,7 +226,7 @@ export const hardwareApi = {
   }): Promise<ReservationPreview> {
     if (USE_MOCKS) return delay(getMockPreview(payload));
 
-    const response = await axios.post(`${API_BASE}${ENDPOINTS.reservationPreview}`, payload, {
+    const response = await http.post(`${ENDPOINTS.reservationPreview}`, payload, {
       headers: authHeader(),
     });
     const data = response?.data?.data ?? response?.data;
@@ -299,12 +290,12 @@ export const hardwareApi = {
 
     let response;
     try {
-      response = await axios.post(`${API_BASE}${ENDPOINTS.reservationCheckout}`, requestBody, {
+      response = await http.post(`${ENDPOINTS.reservationCheckout}`, requestBody, {
         headers: authHeader(),
       });
     } catch (error) {
       // Fallback for backends that still expect camelCase request body.
-      response = await axios.post(`${API_BASE}${ENDPOINTS.reservationCheckout}`, payload, {
+      response = await http.post(`${ENDPOINTS.reservationCheckout}`, payload, {
         headers: authHeader(),
       });
       void error;
@@ -334,7 +325,7 @@ export const hardwareApi = {
       return delay(services.filter((item) => !item.ownerPhone || item.ownerPhone === phone));
     }
 
-    const response = await axios.get<{ data: PurchasedService[] }>(`${API_BASE}${ENDPOINTS.userServices}`, {
+    const response = await http.get<{ data: PurchasedService[] }>(`${ENDPOINTS.userServices}`, {
       headers: authHeader(),
     });
     return response.data.data;
@@ -343,7 +334,7 @@ export const hardwareApi = {
   async getAdminServers(): Promise<HardwareServer[]> {
     if (USE_MOCKS) return delay(getMockServersStore());
 
-    const response = await axios.get<{ data: HardwareServer[] }>(`${API_BASE}${ENDPOINTS.adminServers}`, {
+    const response = await http.get<{ data: HardwareServer[] }>(`${ENDPOINTS.adminServers}`, {
       headers: authHeader(),
     });
     return response.data.data;
@@ -359,8 +350,8 @@ export const hardwareApi = {
       return delay(created);
     }
 
-    const response = await axios.post<{ data: HardwareServer }>(
-      `${API_BASE}${ENDPOINTS.adminServers}`,
+    const response = await http.post<{ data: HardwareServer }>(
+      `${ENDPOINTS.adminServers}`,
       payload,
       { headers: authHeader() }
     );
@@ -383,8 +374,8 @@ export const hardwareApi = {
       return delay(updatedServer);
     }
 
-    const response = await axios.patch<{ data: HardwareServer }>(
-      `${API_BASE}${ENDPOINTS.adminServers}/${serverId}`,
+    const response = await http.patch<{ data: HardwareServer }>(
+      `${ENDPOINTS.adminServers}/${serverId}`,
       payload,
       { headers: authHeader() }
     );
@@ -399,7 +390,7 @@ export const hardwareApi = {
       return delay({ success: true });
     }
 
-    await axios.delete(`${API_BASE}${ENDPOINTS.adminServers}/${serverId}`, {
+    await http.delete(`${ENDPOINTS.adminServers}/${serverId}`, {
       headers: authHeader(),
     });
     return { success: true };
@@ -408,7 +399,7 @@ export const hardwareApi = {
   async getAdminUsers(): Promise<AdminUser[]> {
     if (USE_MOCKS) return delay(mockAdminUsers);
 
-    const response = await axios.get<{ data: AdminUser[] }>(`${API_BASE}${ENDPOINTS.adminUsers}`, {
+    const response = await http.get<{ data: AdminUser[] }>(`${ENDPOINTS.adminUsers}`, {
       headers: authHeader(),
     });
     return response.data.data;
@@ -422,8 +413,8 @@ export const hardwareApi = {
       return delay(mockAdminReservations);
     }
 
-    const response = await axios.get<{ data: AdminReservation[] }>(
-      `${API_BASE}${ENDPOINTS.adminReservations}`,
+    const response = await http.get<{ data: AdminReservation[] }>(
+      `${ENDPOINTS.adminReservations}`,
       { headers: authHeader() }
     );
     return response.data.data;
@@ -464,7 +455,7 @@ export const hardwareApi = {
       return delay({ success: true });
     }
 
-    await axios.post(`${API_BASE}${ENDPOINTS.adminCredentials}`, payload, {
+    await http.post(`${ENDPOINTS.adminCredentials}`, payload, {
       headers: authHeader(),
     });
     return { success: true };

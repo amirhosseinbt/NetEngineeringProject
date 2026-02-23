@@ -1,7 +1,4 @@
-import axios from "axios";
-
-const API_BASE = process.env.NEXT_PUBLIC_URL;
-const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false" || !API_BASE;
+import { USE_MOCKS, authHeader, http } from "@/services/http";
 
 interface MockUser {
   id: number;
@@ -77,7 +74,7 @@ export const authApi = {
       return { success: true };
     }
 
-    await axios.post(`${API_BASE}/api/register/`, {
+    await http.post(`/api/register/`, {
       first_name: payload.firstName,
       last_name: payload.lastName,
       phone_number: payload.phoneNumber,
@@ -115,7 +112,7 @@ export const authApi = {
     }
 
     const endpoint = payload.role === "admin" ? "/admin/login/" : "/api/login/";
-    const response = await axios.post(`${API_BASE}${endpoint}`, {
+    const response = await http.post(`${endpoint}`, {
       phone_number: payload.phoneNumber,
     });
 
@@ -141,10 +138,8 @@ export const authApi = {
       };
     }
 
-    const response = await axios.get(`${API_BASE}/api/profile/`, {
-      headers: {
-        Authorization: typeof window !== "undefined" ? localStorage.getItem("token") : "",
-      },
+    const response = await http.get(`/api/profile/`, {
+      headers: authHeader(),
     });
 
     return {
@@ -184,17 +179,15 @@ export const authApi = {
       return { success: true };
     }
 
-    await axios.patch(
-      `${API_BASE}/api/profile/`,
+    await http.patch(
+      `/api/profile/`,
       {
         first_name: payload.firstName,
         last_name: payload.lastName,
         phone_number: payload.phoneNumber,
       },
       {
-        headers: {
-          Authorization: typeof window !== "undefined" ? localStorage.getItem("token") : "",
-        },
+        headers: authHeader(),
       }
     );
 

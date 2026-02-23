@@ -7,10 +7,18 @@ Existing project APIs are untouched.
 
 Frontend can run without backend:
 
-- If `NEXT_PUBLIC_USE_MOCKS` is not set or set to anything except `false`, mock data is used.
-- If `NEXT_PUBLIC_USE_MOCKS=false` and `NEXT_PUBLIC_URL` is set, real backend is used.
+- If `NEXT_PUBLIC_USE_MOCKS=true`, mock data is used.
+- If `NEXT_PUBLIC_USE_MOCKS` is not set, mock mode only when API base URL is empty.
+- If `NEXT_PUBLIC_USE_MOCKS=false` and API base URL is set, real backend is used.
+
+Environment variables:
+
+- `NEXT_PUBLIC_API_BASE_URL` (preferred)
+- `NEXT_PUBLIC_URL` (legacy fallback)
+- `NEXT_PUBLIC_USE_MOCKS=true|false`
 
 Main client wrapper: `src/services/hardwareApi.ts`
+HTTP helpers: `src/services/http.ts`
 Mock source: `src/mocks/hardware.ts`
 
 ## New Frontend Routes
@@ -18,7 +26,6 @@ Mock source: `src/mocks/hardware.ts`
 - `/hardware`
 - `/hardware/reserve/[serverId]`
 - `/hardware/checkout/[reservationId]`
-- `/my-services`
 - `/admin`
 - `/admin/servers`
 - `/admin/users`
