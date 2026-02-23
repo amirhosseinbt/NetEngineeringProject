@@ -225,6 +225,21 @@
     @apply grid w-full grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6;
   }
 
+  .admin-header {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d9e4ff] px-4 py-3 shadow-[0_10px_26px_rgba(36,75,197,0.1)] md:px-5;
+    background:
+      radial-gradient(420px 160px at 105% -30%, rgba(36, 75, 197, 0.18), transparent 60%),
+      linear-gradient(120deg, #f7faff 0%, #eef3ff 58%, #e9f0ff 100%);
+  }
+
+  .admin-header-title {
+    @apply text-base font-extrabold text-[#1d3ca1] md:text-lg;
+  }
+
+  .admin-header-badge {
+    @apply inline-flex items-center rounded-full border border-[#c8d8ff] bg-white/90 px-3 py-1 text-xs font-bold text-[#244BC5];
+  }
+
   .admin-main-card {
     @apply min-h-[calc(100vh-3rem)] rounded-2xl border border-[#d9e4ff] bg-white/88 p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)] backdrop-blur-[2px] md:p-6 lg:p-8;
   }
