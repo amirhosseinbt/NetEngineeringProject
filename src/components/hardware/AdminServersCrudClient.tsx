@@ -150,7 +150,7 @@ export default function AdminServersCrudClient() {
 
   return (
     <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1.4fr]">
-      <div className="rounded-xl bg-[#D9D9D9] p-4 shadow-xl">
+      <div className="muted-panel">
         <p className="mb-3 text-sm font-bold text-slate-700">
           {editId === null ? "ایجاد سرور جدید" : `ویرایش سرور #${editId}`}
         </p>
@@ -160,19 +160,19 @@ export default function AdminServersCrudClient() {
             value={form.name}
             onChange={(e) => updateField("name", e.target.value)}
             placeholder="نام سرور"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="input-shell"
           />
           <input
             value={form.cpu}
             onChange={(e) => updateField("cpu", e.target.value)}
             placeholder="پردازنده"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="input-shell"
           />
           <input
             value={form.gpu}
             onChange={(e) => updateField("gpu", e.target.value)}
             placeholder="کارت گرافیک"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="input-shell"
           />
 
           <div className="grid grid-cols-2 gap-2">
@@ -182,7 +182,7 @@ export default function AdminServersCrudClient() {
               placeholder="رم (GB)"
               type="number"
               min={1}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="input-shell"
             />
             <input
               value={form.diskGb}
@@ -190,7 +190,7 @@ export default function AdminServersCrudClient() {
               placeholder="دیسک (GB)"
               type="number"
               min={1}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="input-shell"
             />
           </div>
 
@@ -198,7 +198,7 @@ export default function AdminServersCrudClient() {
             value={form.os}
             onChange={(e) => updateField("os", e.target.value)}
             placeholder="سیستم عامل"
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="input-shell"
           />
 
           <div className="grid grid-cols-2 gap-2">
@@ -208,7 +208,7 @@ export default function AdminServersCrudClient() {
               placeholder="قیمت ساعتی"
               type="number"
               min={1}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="input-shell"
             />
             <input
               value={form.dailyPrice}
@@ -216,14 +216,14 @@ export default function AdminServersCrudClient() {
               placeholder="قیمت روزانه"
               type="number"
               min={1}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              className="input-shell"
             />
           </div>
 
           <select
             value={form.status}
             onChange={(e) => updateField("status", e.target.value as HardwareServer["status"])}
-            className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            className="input-shell"
           >
             <option value="AVAILABLE">فعال</option>
             <option value="MAINTENANCE">در حال تعمیر</option>
@@ -231,19 +231,12 @@ export default function AdminServersCrudClient() {
           </select>
 
           <div className="mt-2 flex gap-2">
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit || saving}
-              className="rounded-md bg-[#244BC5] px-3 py-2 text-sm font-bold text-white disabled:brightness-75"
-            >
+            <button onClick={handleSubmit} disabled={!canSubmit || saving} className="primary-btn">
               {saving ? "در حال ذخیره..." : editId === null ? "ایجاد سرور" : "ذخیره ویرایش"}
             </button>
 
             {editId !== null && (
-              <button
-                onClick={resetForm}
-                className="rounded-md bg-white px-3 py-2 text-sm font-bold text-slate-700"
-              >
+              <button onClick={resetForm} className="secondary-btn">
                 انصراف
               </button>
             )}
@@ -251,9 +244,9 @@ export default function AdminServersCrudClient() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-[#D9D9D9] shadow-xl">
+      <div className="table-shell">
         <table className="w-full text-right text-sm">
-          <thead className="bg-[#C9C9C9]">
+          <thead className="bg-slate-100">
             <tr>
               <th className="p-2">نام سرور</th>
               <th className="p-2">CPU / GPU</th>
@@ -287,13 +280,13 @@ export default function AdminServersCrudClient() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(s)}
-                        className="rounded-md bg-white px-2 py-1 text-xs font-bold text-[#244BC5]"
+                        className="secondary-btn px-2 py-1 text-xs"
                       >
                         ویرایش
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700"
+                        className="rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700 transition hover:bg-red-200"
                       >
                         حذف
                       </button>

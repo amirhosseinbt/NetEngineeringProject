@@ -249,18 +249,18 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
 
   return (
     <div className="mt-5 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-      <div className="rounded-xl bg-[#D9D9D9] p-4 shadow-xl">
+      <div className="muted-panel">
         <div className="mb-4 flex items-center justify-between">
           <button
             onClick={() => setDisplayMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-            className="rounded-md bg-white px-3 py-1 text-sm font-bold text-[#244BC5]"
+            className="secondary-btn px-3 py-1"
           >
             ماه قبل
           </button>
           <p className="text-base font-bold text-slate-800">{monthTitle}</p>
           <button
             onClick={() => setDisplayMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-            className="rounded-md bg-white px-3 py-1 text-sm font-bold text-[#244BC5]"
+            className="secondary-btn px-3 py-1"
           >
             ماه بعد
           </button>
@@ -275,7 +275,7 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
 
           {grid.map((dateKey, index) => {
             if (!dateKey) {
-              return <div key={`empty-${index}`} className="h-12 rounded-md bg-[#ECECEC]" />;
+              return <div key={`empty-${index}`} className="h-12 rounded-md bg-slate-100" />;
             }
 
             const status = availabilityMap[dateKey];
@@ -314,13 +314,13 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
-          <span className="rounded-md bg-white px-2 py-1 text-slate-700">آزاد</span>
+          <span className="rounded-md border border-slate-200 bg-white px-2 py-1 text-slate-700">آزاد</span>
           <span className="rounded-md bg-amber-100 px-2 py-1 text-amber-700">نیمه پر (برای رزرو ساعتی)</span>
           <span className="rounded-md bg-red-100 px-2 py-1 text-red-700">رزرو شده</span>
         </div>
       </div>
 
-      <div className="rounded-xl bg-[#D9D9D9] p-4 shadow-xl">
+      <div className="muted-panel">
         {unit === "DAILY" && (
           <div className="space-y-3 text-sm font-bold text-slate-700">
             <p>رزرو روزانه:</p>
@@ -367,13 +367,13 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
                       key={`${slot.startAt}-${slot.endAt}`}
                       disabled={slot.isReserved}
                       onClick={() => handleSlotClick(index)}
-                      className={`rounded-md p-2 text-right text-sm font-bold ${
-                        slot.isReserved
-                          ? "cursor-not-allowed bg-red-100 text-red-700"
-                          : isSelected
-                            ? "bg-[#244BC5] text-white"
-                            : "bg-white text-slate-700"
-                      }`}
+                    className={`rounded-md p-2 text-right text-sm font-bold transition ${
+                      slot.isReserved
+                        ? "cursor-not-allowed bg-red-100 text-red-700"
+                        : isSelected
+                            ? "bg-[#244BC5] text-white shadow"
+                            : "bg-white text-slate-700 hover:bg-slate-100"
+                    }`}
                     >
                       {formatTimeLabel(slot.startAt)} تا {formatTimeLabel(slot.endAt)}
                     </button>

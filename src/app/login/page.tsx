@@ -51,9 +51,10 @@ export default function Login() {
         backgroundSize: 'cover'
     }}>
         <div className='size-full flex items-center justify-center'>
-            <div className='flex flex-col items-center justify-center gap-10'>
+            <div className='flex flex-col items-center justify-center gap-8 rounded-2xl border border-white/30 bg-white/10 px-8 py-10 shadow-2xl backdrop-blur-sm'>
                 <Image src='/images/icon.svg' alt='logo' width={120} height={120} />
                 <div className='flex items-center flex-col justify-center gap-5'>
+                    <p className='text-white text-lg font-bold'>ورود به سامانه</p>
                     <div className='flex gap-2 w-[300px]'>
                         <button
                             type='button'

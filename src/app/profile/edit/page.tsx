@@ -60,36 +60,36 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className='w-full p-6'>
-      <div className='mx-auto w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl'>
-        <h1 className='text-2xl font-bold text-[#244BC5]'>ویرایش حساب کاربری</h1>
+    <div className='page-shell'>
+      <div className='content-shell max-w-4xl'>
+        <h1 className='section-title'>ویرایش حساب کاربری</h1>
         <p className='mt-2 text-sm text-slate-600'>
           اطلاعات هویتی و شماره تماس خود را به‌روزرسانی کنید.
         </p>
 
-        <div className='mt-5 rounded-xl bg-[#D9D9D9] p-4 shadow-xl'>
+        <div className='mt-5 muted-panel'>
           <div className='grid gap-3'>
-            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+            <div className='flex items-center'>
               <UserRound className='text-[#244BC5]' size={18} />
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder='نام'
-                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
+                className='input-shell mr-2'
               />
             </div>
 
-            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+            <div className='flex items-center'>
               <UserRound className='text-[#244BC5]' size={18} />
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder='نام خانوادگی'
-                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
+                className='input-shell mr-2'
               />
             </div>
 
-            <div className='flex items-center border h-11 border-slate-300 bg-white rounded-md px-2'>
+            <div className='flex items-center'>
               <Phone className='text-[#244BC5]' size={18} />
               <input
                 type='tel'
@@ -98,24 +98,16 @@ export default function EditProfilePage() {
                 pattern='[0-9]*'
                 inputMode='numeric'
                 placeholder='شماره تلفن'
-                className='w-full text-slate-700 px-2 py-1 outline-none bg-transparent placeholder:text-slate-400'
+                className='input-shell mr-2'
               />
             </div>
 
             <div className='mt-2 flex gap-2'>
-              <button
-                type='button'
-                disabled={!canSubmit || loading || loadingProfile}
-                onClick={handleSave}
-                className='bg-[#244BC5] text-white disabled:brightness-75 text-sm font-bold rounded-md h-10 px-4 flex items-center justify-center'
-              >
+              <button type='button' disabled={!canSubmit || loading || loadingProfile} onClick={handleSave} className='primary-btn'>
                 {loading || loadingProfile ? <Spinner /> : "ذخیره تغییرات"}
               </button>
 
-              <Link
-                href='/'
-                className='rounded-md bg-white border border-slate-300 px-4 h-10 text-sm font-bold text-slate-700 flex items-center justify-center'
-              >
+              <Link href='/' className='secondary-btn'>
                 بازگشت
               </Link>
             </div>

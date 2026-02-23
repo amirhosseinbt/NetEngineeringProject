@@ -23,10 +23,10 @@ export default function AdminTablesClient({
   }, [mode]);
 
   return (
-    <div className="mt-5 overflow-x-auto rounded-lg bg-[#D9D9D9] shadow-xl">
+    <div className="table-shell mt-5">
       {mode === "servers" && (
         <table className="w-full text-right text-sm">
-          <thead className="bg-[#C9C9C9]">
+          <thead className="bg-slate-100">
             <tr>
               <th className="p-2">نام سرور</th>
               <th className="p-2">پردازنده</th>
@@ -49,7 +49,7 @@ export default function AdminTablesClient({
 
       {mode === "users" && (
         <table className="w-full text-right text-sm">
-          <thead className="bg-[#C9C9C9]">
+          <thead className="bg-slate-100">
             <tr>
               <th className="p-2">شناسه</th>
               <th className="p-2">نام</th>
@@ -70,7 +70,7 @@ export default function AdminTablesClient({
 
       {mode === "reservations" && (
         <table className="w-full text-right text-sm">
-          <thead className="bg-[#C9C9C9]">
+          <thead className="bg-slate-100">
             <tr>
               <th className="p-2">شماره رزرو</th>
               <th className="p-2">کاربر</th>

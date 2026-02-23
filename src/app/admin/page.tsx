@@ -10,19 +10,15 @@ const links = [
 
 export default function AdminPage() {
   return (
-    <div className="w-full p-6">
+    <div className="page-shell">
       <HomeStats />
-      <div className="mx-auto w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-[#244BC5]">پنل مدیریت</h1>
+      <div className="content-shell max-w-4xl">
+        <h1 className="section-title">پنل مدیریت</h1>
         <p className="mt-2 text-sm text-slate-600">بخش مورد نظر را انتخاب کنید.</p>
 
         <div className="mt-5 flex flex-wrap gap-2">
           {links.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="rounded-md bg-[#244BC5] px-3 py-2 text-sm font-bold text-white"
-            >
+            <Link key={item.href} href={item.href} className="primary-btn">
               {item.label}
             </Link>
           ))}

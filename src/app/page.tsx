@@ -9,8 +9,8 @@ export default function Home() {
     <div className="w-full flex flex-col">
       <Header />
       <ModuleLinks />
-      <Tab />
-      <TabContent />
+      {/* <Tab /> */}
+      {/* <TabContent /> */}
     </div>
   );
 }

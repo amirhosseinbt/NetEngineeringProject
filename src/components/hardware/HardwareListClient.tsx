@@ -29,9 +29,9 @@ export default function HardwareListClient() {
   const summary = useMemo(() => `${servers.length} سرور پیدا شد`, [servers.length]);
 
   return (
-    <div className="w-full p-6">
-      <div className="mx-auto w-full max-w-6xl rounded-xl bg-white p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-[#244BC5]">رزرو سخت افزار</h1>
+    <div className="page-shell">
+      <div className="content-shell">
+        <h1 className="section-title">رزرو سخت افزار</h1>
         <p className="mt-2 text-sm text-slate-600">
           مبنای چینش را انتخاب کنید و سرور مورد نظر را برای رزرو انتخاب کنید.
         </p>
@@ -39,16 +39,16 @@ export default function HardwareListClient() {
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button
             onClick={() => setBasis("GPU")}
-            className={`rounded-md px-4 py-2 text-sm font-bold ${
-              basis === "GPU" ? "bg-[#244BC5] text-white" : "bg-[#D9D9D9] text-slate-700"
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+              basis === "GPU" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             بر اساس GPU
           </button>
           <button
             onClick={() => setBasis("CPU")}
-            className={`rounded-md px-4 py-2 text-sm font-bold ${
-              basis === "CPU" ? "bg-[#244BC5] text-white" : "bg-[#D9D9D9] text-slate-700"
+            className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+              basis === "CPU" ? "bg-[#244BC5] text-white shadow" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             بر اساس CPU
@@ -57,14 +57,14 @@ export default function HardwareListClient() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={basis === "GPU" ? "مثال: RTX 5080" : "مثال: Ryzen 9"}
-            className="min-w-[260px] rounded-md border border-slate-300 px-3 py-2 text-sm outline-none"
+            className="input-shell min-w-[260px]"
           />
           <span className="text-sm font-bold text-slate-600">{loading ? "در حال بارگذاری..." : summary}</span>
         </div>
 
         <div className="mt-6 grid gap-3">
           {servers.map((server, index) => (
-            <div key={server.id} className="relative rounded-md bg-[#D9D9D9] px-5 py-4 shadow-xl">
+            <div key={server.id} className="relative muted-panel">
               <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-slate-700">
                 {index + 1}
               </span>
@@ -79,10 +79,7 @@ export default function HardwareListClient() {
                 <div className="text-left">
                   <p className="text-sm font-bold text-slate-700">ساعتی: {server.hourlyPrice.toLocaleString()} تومان</p>
                   <p className="text-sm font-bold text-slate-700">روزانه: {server.dailyPrice.toLocaleString()} تومان</p>
-                  <Link
-                    href={`/hardware/reserve/${server.id}`}
-                    className="mt-2 inline-block rounded-md bg-[#244BC5] px-3 py-2 text-sm font-bold text-white"
-                  >
+                  <Link href={`/hardware/reserve/${server.id}`} className="primary-btn mt-2">
                     رزرو
                   </Link>
                 </div>
@@ -91,7 +88,7 @@ export default function HardwareListClient() {
           ))}
 
           {!loading && servers.length === 0 && (
-            <p className="rounded-md bg-[#D9D9D9] p-4 text-sm font-bold text-slate-700">سروری یافت نشد.</p>
+            <p className="muted-panel text-sm font-bold text-slate-700">سروری یافت نشد.</p>
           )}
         </div>
       </div>

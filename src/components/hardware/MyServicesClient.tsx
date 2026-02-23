@@ -16,16 +16,16 @@ export default function MyServicesClient() {
   }, []);
 
   return (
-    <div className="w-full p-6">
-      <div className="mx-auto w-full max-w-6xl rounded-xl bg-white p-6 shadow-xl">
-        <h1 className="text-2xl font-bold text-[#244BC5]">سرویس های خریداری شده من</h1>
+    <div className="page-shell">
+      <div className="content-shell">
+        <h1 className="section-title">سرویس های خریداری شده من</h1>
         <p className="mt-2 text-sm text-slate-600">
           لیست سرویس های خریداری شده به همراه وضعیت اطلاعات ورود.
         </p>
 
         <div className="mt-5 grid gap-3">
           {items.map((item, index) => (
-            <div key={item.reservationId} className="relative rounded-md bg-[#D9D9D9] p-4 text-sm shadow-xl">
+            <div key={item.reservationId} className="relative muted-panel text-sm">
               <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white font-bold text-slate-700">
                 {index + 1}
               </span>

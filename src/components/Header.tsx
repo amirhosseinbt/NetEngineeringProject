@@ -13,12 +13,12 @@ export default function Header(){
         toast.success('خروج شما با موفقیت انجام شد.')
         window.location.reload();
     }
-    return <div className='w-full bg-[#244BC5] shadow-2xl  px-5 py-3 '>
+    return <div className='w-full bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] shadow-2xl px-5 py-3'>
         <div className='w-full flex items-center justify-center h-full relative'><p
-            className='text-white cursor-pointer font-bold text-2xl hover:scale-110 duration-500' onClick={()=>router.push('/')}>سامانه پیساز</p>
+            className='text-white cursor-pointer font-bold text-2xl tracking-tight hover:opacity-90 duration-300' onClick={()=>router.push('/')}>سامانه پیساز</p>
             <button
                 onClick={()=>handleLogout()}
-                className='text-2xl cursor-pointer text-white absolute left-0'><LogOut className='hover:scale-105 active:scale-95 duration-300'/></button>
+                className='text-2xl cursor-pointer text-white absolute left-0 rounded-md bg-white/10 p-1.5'><LogOut className='hover:scale-105 active:scale-95 duration-300'/></button>
         </div>
     </div>
 }

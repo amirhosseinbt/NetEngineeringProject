@@ -54,15 +54,15 @@ export default function HomeStats() {
   ];
 
   return (
-    <div className="w-full px-5 pb-6">
-      <div className="rounded-xl bg-[#D9D9D9] p-4 shadow-xl">
+    <div className="page-shell pb-4">
+      <div className="content-shell">
         <p className="mb-4 text-sm font-bold text-slate-700">داشبورد مدیریتی</p>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {cards.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.id} className="rounded-md bg-white p-4 shadow-sm">
+              <div key={item.id} className="muted-panel">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-bold text-slate-700">{item.title}</p>
                   <Icon className="text-[#244BC5]" size={18} />

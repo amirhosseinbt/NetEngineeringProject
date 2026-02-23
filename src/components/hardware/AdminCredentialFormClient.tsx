@@ -22,35 +22,32 @@ export default function AdminCredentialFormClient() {
   };
 
   return (
-    <div className="mt-5 grid max-w-lg gap-3">
+    <div className="muted-panel mt-5 grid max-w-lg gap-3">
       <input
         value={reservationId}
         onChange={(e) => setReservationId(e.target.value)}
-        className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="input-shell"
         placeholder="شماره رزرو"
       />
       <input
         value={ipAddress}
         onChange={(e) => setIpAddress(e.target.value)}
-        className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="input-shell"
         placeholder="آدرس IP"
       />
       <input
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="input-shell"
         placeholder="نام کاربری"
       />
       <input
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="rounded-md border border-slate-300 px-3 py-2 text-sm"
+        className="input-shell"
         placeholder="رمز عبور"
       />
-      <button
-        onClick={submit}
-        className="rounded-md bg-[#244BC5] px-4 py-2 text-sm font-bold text-white"
-      >
+      <button onClick={submit} className="primary-btn">
         ثبت اطلاعات ورود
       </button>
 

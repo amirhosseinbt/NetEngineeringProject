@@ -55,10 +55,11 @@ export default function RegisterPage() {
       }}
     >
       <div className='size-full flex items-center justify-center'>
-        <div className='flex flex-col items-center justify-center gap-8'>
+        <div className='flex flex-col items-center justify-center gap-8 rounded-2xl border border-white/30 bg-white/10 px-8 py-10 shadow-2xl backdrop-blur-sm'>
           <Image src='/images/icon.svg' alt='logo' width={120} height={120} />
 
           <div className='flex items-center flex-col justify-center gap-4 w-[320px]'>
+            <p className='text-white text-lg font-bold'>ثبت نام کاربر</p>
             <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
               <UserRound className='text-white' size={18} />
               <input

@@ -4,6 +4,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --brand-500: #244bc5;
+  --brand-600: #1d3ca1;
+  --surface-100: #f4f7ff;
+  --surface-200: #e8eefc;
+  --surface-300: #d9d9d9;
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -118,7 +123,44 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 100% 0%, rgba(36, 75, 197, 0.1) 0, rgba(36, 75, 197, 0) 34%),
+      radial-gradient(circle at 0% 100%, rgba(27, 78, 202, 0.08) 0, rgba(27, 78, 202, 0) 38%);
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply w-full p-4 md:p-6;
+  }
+
+  .content-shell {
+    @apply mx-auto w-full max-w-6xl rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm md:p-6;
+  }
+
+  .muted-panel {
+    @apply rounded-xl border border-slate-200/80 bg-[var(--surface-100)] p-4 shadow-[0_6px_20px_rgba(15,23,42,0.06)];
+  }
+
+  .table-shell {
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-[0_6px_20px_rgba(15,23,42,0.06)];
+  }
+
+  .input-shell {
+    @apply h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[var(--brand-500)] focus:ring-2 focus:ring-[rgba(36,75,197,0.15)];
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center justify-center rounded-lg bg-[var(--brand-500)] px-4 py-2 text-sm font-bold text-white transition hover:bg-[var(--brand-600)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70;
+  }
+
+  .secondary-btn {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-100 active:scale-[0.99];
+  }
+
+  .section-title {
+    @apply text-2xl font-bold text-[var(--brand-500)];
   }
 }
 
@@ -131,4 +173,3 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
-
