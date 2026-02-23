@@ -80,6 +80,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib
 const API_BASE = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_URL;
 const USE_MOCKS = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_USE_MOCKS !== "false" || !API_BASE;
 const STORAGE_KEY = "mock_registered_users";
+const MOCK_ADMIN_PHONE = "09990000000";
 function getMockUsers() {
     if ("TURBOPACK compile-time falsy", 0) {
         "TURBOPACK unreachable";
@@ -142,6 +143,16 @@ const authApi = {
     },
     async login (payload) {
         if (USE_MOCKS) {
+            if (payload.role === "admin") {
+                if (payload.phoneNumber !== MOCK_ADMIN_PHONE) {
+                    throw new Error("ADMIN_NOT_FOUND");
+                }
+                return {
+                    token: `mock-admin-token-${payload.phoneNumber}`,
+                    isVip: false,
+                    role: "admin"
+                };
+            }
             const users = getMockUsers();
             const user = users.find((item)=>item.phoneNumber === payload.phoneNumber);
             if (!user) {
@@ -149,15 +160,18 @@ const authApi = {
             }
             return {
                 token: `mock-token-${payload.phoneNumber}`,
-                isVip: false
+                isVip: false,
+                role: "user"
             };
         }
-        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].post(`${API_BASE}/api/login/`, {
+        const endpoint = payload.role === "admin" ? "/admin/login/" : "/api/login/";
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].post(`${API_BASE}${endpoint}`, {
             phone_number: payload.phoneNumber
         });
         return {
             token: response.data.data.token,
-            isVip: Boolean(response.data.data.is_vip)
+            isVip: Boolean(response.data.data.is_vip),
+            role: payload.role
         };
     },
     async getProfile () {

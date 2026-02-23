@@ -4,7 +4,6 @@ const links = [
   { href: "/hardware", label: "رزرو سخت افزار" },
   { href: "/my-services", label: "سرویس های من" },
   { href: "/profile/edit", label: "ویرایش حساب کاربری" },
-  { href: "/admin", label: "پنل ادمین" },
 ];
 
 export default function ModuleLinks() {

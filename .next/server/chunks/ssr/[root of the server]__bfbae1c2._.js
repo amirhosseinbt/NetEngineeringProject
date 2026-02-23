@@ -230,13 +230,23 @@ function AuthToken({ children }) {
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const token = localStorage.getItem("token");
+        const role = localStorage.getItem("user_role") === "admin" ? "admin" : "user";
         const isPublicRoute = publicRoutes.has(pathname);
+        const isAdminRoute = pathname.startsWith("/admin");
         if (!token && !isPublicRoute) {
             router.push("/login");
             return;
         }
         if (token && isPublicRoute) {
+            router.push(role === "admin" ? "/admin" : "/");
+            return;
+        }
+        if (token && isAdminRoute && role !== "admin") {
             router.push("/");
+            return;
+        }
+        if (token && !isPublicRoute && !isAdminRoute && role === "admin") {
+            router.push("/admin");
             return;
         }
         const expiration = localStorage.getItem('token_expiration');
@@ -244,6 +254,7 @@ function AuthToken({ children }) {
             localStorage.removeItem('token');
             localStorage.removeItem('token_expiration');
             localStorage.removeItem('is_vip');
+            localStorage.removeItem('user_role');
             router.push('/login');
         }
     }, [

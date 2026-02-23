@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HomeStats from "@/components/home/HomeStats";
 
 const links = [
   { href: "/admin/servers", label: "مدیریت سرورها" },
@@ -10,6 +11,7 @@ const links = [
 export default function AdminPage() {
   return (
     <div className="w-full p-6">
+      <HomeStats />
       <div className="mx-auto w-full max-w-4xl rounded-xl bg-white p-6 shadow-xl">
         <h1 className="text-2xl font-bold text-[#244BC5]">پنل مدیریت</h1>
         <p className="mt-2 text-sm text-slate-600">بخش مورد نظر را انتخاب کنید.</p>

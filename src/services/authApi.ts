@@ -13,6 +13,7 @@ interface MockUser {
 interface LoginResult {
   token: string;
   isVip: boolean;
+  role: "user" | "admin";
 }
 
 export interface UserProfile {
@@ -22,6 +23,7 @@ export interface UserProfile {
 }
 
 const STORAGE_KEY = "mock_registered_users";
+const MOCK_ADMIN_PHONE = "09990000000";
 
 function getMockUsers(): MockUser[] {
   if (typeof window === "undefined") return [];
@@ -84,8 +86,20 @@ export const authApi = {
     return { success: true };
   },
 
-  async login(payload: { phoneNumber: string }): Promise<LoginResult> {
+  async login(payload: { phoneNumber: string; role: "user" | "admin" }): Promise<LoginResult> {
     if (USE_MOCKS) {
+      if (payload.role === "admin") {
+        if (payload.phoneNumber !== MOCK_ADMIN_PHONE) {
+          throw new Error("ADMIN_NOT_FOUND");
+        }
+
+        return {
+          token: `mock-admin-token-${payload.phoneNumber}`,
+          isVip: false,
+          role: "admin",
+        };
+      }
+
       const users = getMockUsers();
       const user = users.find((item) => item.phoneNumber === payload.phoneNumber);
 
@@ -96,16 +110,19 @@ export const authApi = {
       return {
         token: `mock-token-${payload.phoneNumber}`,
         isVip: false,
+        role: "user",
       };
     }
 
-    const response = await axios.post(`${API_BASE}/api/login/`, {
+    const endpoint = payload.role === "admin" ? "/admin/login/" : "/api/login/";
+    const response = await axios.post(`${API_BASE}${endpoint}`, {
       phone_number: payload.phoneNumber,
     });
 
     return {
       token: response.data.data.token,
       isVip: Boolean(response.data.data.is_vip),
+      role: payload.role,
     };
   },
 

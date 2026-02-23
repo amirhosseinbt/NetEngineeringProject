@@ -228,6 +228,7 @@ function authHeader() {
         Authorization: ("TURBOPACK compile-time truthy", 1) ? localStorage.getItem("token") : ("TURBOPACK unreachable", undefined)
     };
 }
+const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
 function delay(data, ms = 250) {
     return new Promise((resolve)=>{
         setTimeout(()=>resolve(data), ms);
@@ -243,6 +244,35 @@ function applyServerFilters(servers, params) {
         }
         return true;
     });
+}
+function getMockServersStore() {
+    if ("TURBOPACK compile-time falsy", 0) {
+        "TURBOPACK unreachable";
+    }
+    const raw = localStorage.getItem(MOCK_SERVERS_STORAGE_KEY);
+    if (!raw) {
+        localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockServers"]));
+        return [
+            ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockServers"]
+        ];
+    }
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [
+            ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockServers"]
+        ];
+        return parsed;
+    } catch  {
+        return [
+            ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockServers"]
+        ];
+    }
+}
+function setMockServersStore(servers) {
+    if ("TURBOPACK compile-time falsy", 0) {
+        "TURBOPACK unreachable";
+    }
+    localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(servers));
 }
 const hardwareApi = {
     async getDashboardStats () {
@@ -317,11 +347,68 @@ const hardwareApi = {
         return response.data.data;
     },
     async getAdminServers () {
-        if (USE_MOCKS) return delay(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockServers"]);
+        if (USE_MOCKS) return delay(getMockServersStore());
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(`${API_BASE}${ENDPOINTS.adminServers}`, {
             headers: authHeader()
         });
         return response.data.data;
+    },
+    async createAdminServer (payload) {
+        if (USE_MOCKS) {
+            const servers = getMockServersStore();
+            const nextId = servers.length > 0 ? Math.max(...servers.map((item)=>item.id)) + 1 : 1;
+            const created = {
+                id: nextId,
+                ...payload
+            };
+            const updated = [
+                ...servers,
+                created
+            ];
+            setMockServersStore(updated);
+            return delay(created);
+        }
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].post(`${API_BASE}${ENDPOINTS.adminServers}`, payload, {
+            headers: authHeader()
+        });
+        return response.data.data;
+    },
+    async updateAdminServer (serverId, payload) {
+        if (USE_MOCKS) {
+            const servers = getMockServersStore();
+            const index = servers.findIndex((item)=>item.id === serverId);
+            if (index === -1) throw new Error("SERVER_NOT_FOUND");
+            const updatedServer = {
+                ...servers[index],
+                ...payload
+            };
+            const updated = [
+                ...servers
+            ];
+            updated[index] = updatedServer;
+            setMockServersStore(updated);
+            return delay(updatedServer);
+        }
+        const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].patch(`${API_BASE}${ENDPOINTS.adminServers}/${serverId}`, payload, {
+            headers: authHeader()
+        });
+        return response.data.data;
+    },
+    async deleteAdminServer (serverId) {
+        if (USE_MOCKS) {
+            const servers = getMockServersStore();
+            const updated = servers.filter((item)=>item.id !== serverId);
+            setMockServersStore(updated);
+            return delay({
+                success: true
+            });
+        }
+        await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].delete(`${API_BASE}${ENDPOINTS.adminServers}/${serverId}`, {
+            headers: authHeader()
+        });
+        return {
+            success: true
+        };
     },
     async getAdminUsers () {
         if (USE_MOCKS) return delay(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$mocks$2f$hardware$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mockAdminUsers"]);

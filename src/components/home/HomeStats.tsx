@@ -56,7 +56,7 @@ export default function HomeStats() {
   return (
     <div className="w-full px-5 pb-6">
       <div className="rounded-xl bg-[#D9D9D9] p-4 shadow-xl">
-        <p className="mb-4 text-sm font-bold text-slate-700">داشبورد خانه</p>
+        <p className="mb-4 text-sm font-bold text-slate-700">داشبورد مدیریتی</p>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {cards.map((item) => {
