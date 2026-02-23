@@ -15,7 +15,7 @@ export default function AdminTopBar() {
 
   return (
     <div className='w-full bg-gradient-to-l from-[#1d3ca1] to-[#244BC5] shadow-2xl px-5 py-3'>
-      <div className='mx-auto flex w-full max-w-6xl items-center justify-center h-full relative'>
+      <div className='w-full flex items-center justify-center h-full relative'>
         <p
           className='text-white cursor-pointer font-bold text-2xl tracking-tight hover:opacity-90 duration-300'
           onClick={() => router.push('/admin')}

@@ -14,6 +14,8 @@ import type {
   AdminUser,
   BuildBasis,
   CalendarDayAvailability,
+  CheckoutReservationPayload,
+  CheckoutReservationResult,
   DashboardStats,
   HardwareServer,
   PurchasedService,
@@ -47,6 +49,7 @@ function authHeader() {
 
 const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
 const MOCK_MY_SERVICES_STORAGE_KEY = "mock_my_services";
+const MOCK_USERS_STORAGE_KEY = "mock_registered_users";
 
 function delay<T>(data: T, ms = 250): Promise<T> {
   return new Promise((resolve) => {
@@ -113,9 +116,70 @@ function setMockMyServicesStore(services: PurchasedService[]) {
   localStorage.setItem(MOCK_MY_SERVICES_STORAGE_KEY, JSON.stringify(services));
 }
 
+function getCurrentMockPhoneFromToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  const prefix = "mock-token-";
+  if (!token.startsWith(prefix)) return null;
+  return token.slice(prefix.length);
+}
+
+function getCurrentRole(): "admin" | "user" {
+  if (typeof window === "undefined") return "user";
+  return localStorage.getItem("user_role") === "admin" ? "admin" : "user";
+}
+
+function getMockRegisteredUsers(): Array<{ firstName: string; lastName: string; phoneNumber: string }> {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(MOCK_USERS_STORAGE_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as Array<{ firstName: string; lastName: string; phoneNumber: string }>;
+  } catch {
+    return [];
+  }
+}
+
+function resolveMockUserFullName(phoneNumber: string | null | undefined): string {
+  if (!phoneNumber) return "کاربر ناشناس";
+
+  const fromAdminUsers = mockAdminUsers.find((item) => item.phoneNumber === phoneNumber);
+  if (fromAdminUsers) return fromAdminUsers.fullName;
+
+  const fromRegisteredUsers = getMockRegisteredUsers().find((item) => item.phoneNumber === phoneNumber);
+  if (fromRegisteredUsers) return `${fromRegisteredUsers.firstName} ${fromRegisteredUsers.lastName}`.trim();
+
+  return "کاربر ناشناس";
+}
+
+function toAdminReservation(service: PurchasedService): AdminReservation {
+  return {
+    reservationId: service.reservationId,
+    userFullName: resolveMockUserFullName(service.ownerPhone),
+    serverName: service.serverName,
+    startAt: service.startAt,
+    endAt: service.endAt,
+    ipAddress: service.ipAddress,
+    username: service.username,
+    password: service.password,
+  };
+}
+
 export const hardwareApi = {
   async getDashboardStats(): Promise<DashboardStats> {
-    if (USE_MOCKS) return delay(mockStats);
+    if (USE_MOCKS) {
+      const services = getMockMyServicesStore();
+      const registered = getMockRegisteredUsers();
+      const usersCount = Math.max(mockStats.usersCount, mockAdminUsers.length, registered.length);
+      const serversCount = getMockServersStore().length;
+      const purchasesCount = services.length;
+      return delay({ usersCount, serversCount, purchasesCount });
+    }
 
     const response = await axios.get<{ data: DashboardStats }>(`${API_BASE}${ENDPOINTS.dashboardStats}`, {
       headers: authHeader(),
@@ -124,7 +188,7 @@ export const hardwareApi = {
   },
 
   async getServers(params: { basis?: BuildBasis; cpu?: string; gpu?: string }): Promise<HardwareServer[]> {
-    if (USE_MOCKS) return delay(applyServerFilters(mockServers, params));
+    if (USE_MOCKS) return delay(applyServerFilters(getMockServersStore(), params));
 
     const response = await axios.get<{ data: HardwareServer[] }>(`${API_BASE}${ENDPOINTS.serverList}`, {
       params,
@@ -171,28 +235,104 @@ export const hardwareApi = {
   }): Promise<ReservationPreview> {
     if (USE_MOCKS) return delay(getMockPreview(payload));
 
-    const response = await axios.post<{ data: ReservationPreview }>(
-      `${API_BASE}${ENDPOINTS.reservationPreview}`,
-      payload,
-      { headers: authHeader() }
-    );
-    return response.data.data;
-  },
-
-  async checkoutReservation(payload: { previewId: string }): Promise<{ success: boolean }> {
-    if (USE_MOCKS) {
-      void payload;
-      return delay({ success: true });
-    }
-
-    await axios.post(`${API_BASE}${ENDPOINTS.reservationCheckout}`, payload, {
+    const response = await axios.post(`${API_BASE}${ENDPOINTS.reservationPreview}`, payload, {
       headers: authHeader(),
     });
-    return { success: true };
+    const data = response?.data?.data ?? response?.data;
+
+    const serverId = Number(data?.serverId ?? data?.server_id ?? payload.serverId);
+    const unit = (data?.unit ?? payload.unit) as RentalUnit;
+    const startAt = String(data?.startAt ?? data?.start_at ?? payload.startAt);
+    const endAt = String(data?.endAt ?? data?.end_at ?? payload.endAt);
+    const totalAmount = Number(data?.totalAmount ?? data?.total_amount ?? 0);
+    const previewId = data?.previewId ?? data?.preview_id;
+
+    if (!Number.isFinite(serverId) || !startAt || !endAt || !Number.isFinite(totalAmount)) {
+      throw new Error("INVALID_PREVIEW_RESPONSE");
+    }
+
+    return {
+      previewId: typeof previewId === "string" ? previewId : undefined,
+      serverId,
+      unit,
+      startAt,
+      endAt,
+      totalAmount,
+      currency: "IRR",
+    };
+  },
+
+  async checkoutReservation(payload: CheckoutReservationPayload): Promise<CheckoutReservationResult> {
+    if (USE_MOCKS) {
+      const services = getMockMyServicesStore();
+      const servers = getMockServersStore();
+      const currentPhone = getCurrentMockPhoneFromToken();
+      const nextReservationId =
+        services.length > 0 ? Math.max(...services.map((item) => item.reservationId)) + 1 : 5001;
+      const server = servers.find((item) => item.id === payload.serverId);
+
+      const created: PurchasedService = {
+        reservationId: nextReservationId,
+        serverName: server?.name ?? `Server ${payload.serverId}`,
+        startAt: payload.startAt,
+        endAt: payload.endAt,
+        totalAmount: payload.totalAmount,
+        ipAddress: null,
+        username: null,
+        password: null,
+        ownerPhone: currentPhone,
+      };
+
+      setMockMyServicesStore([created, ...services]);
+      return delay({ success: true, reservationId: nextReservationId });
+    }
+
+    const requestBody = payload.previewId
+      ? { preview_id: payload.previewId }
+      : {
+          server_id: payload.serverId,
+          unit: payload.unit,
+          start_at: payload.startAt,
+          end_at: payload.endAt,
+          total_amount: payload.totalAmount,
+        };
+
+    let response;
+    try {
+      response = await axios.post(`${API_BASE}${ENDPOINTS.reservationCheckout}`, requestBody, {
+        headers: authHeader(),
+      });
+    } catch (error) {
+      // Fallback for backends that still expect camelCase request body.
+      response = await axios.post(`${API_BASE}${ENDPOINTS.reservationCheckout}`, payload, {
+        headers: authHeader(),
+      });
+      void error;
+    }
+    const reservationId =
+      response?.data?.data?.reservation_id ??
+      response?.data?.data?.reservationId ??
+      response?.data?.reservation_id ??
+      response?.data?.reservationId;
+
+    if (typeof reservationId !== "number") {
+      throw new Error("INVALID_CHECKOUT_RESPONSE");
+    }
+
+    return { success: true, reservationId };
   },
 
   async getMyServices(): Promise<PurchasedService[]> {
-    if (USE_MOCKS) return delay(getMockMyServicesStore());
+    if (USE_MOCKS) {
+      const role = getCurrentRole();
+      const phone = getCurrentMockPhoneFromToken();
+      const services = getMockMyServicesStore();
+
+      if (role === "admin") return delay(services);
+      if (!phone) return delay(services);
+
+      return delay(services.filter((item) => !item.ownerPhone || item.ownerPhone === phone));
+    }
 
     const response = await axios.get<{ data: PurchasedService[] }>(`${API_BASE}${ENDPOINTS.userServices}`, {
       headers: authHeader(),
@@ -276,21 +416,10 @@ export const hardwareApi = {
 
   async getAdminReservations(): Promise<AdminReservation[]> {
     if (USE_MOCKS) {
-      const servicesByReservation = new Map(
-        getMockMyServicesStore().map((item) => [item.reservationId, item] as const)
-      );
+      const fromServices = getMockMyServicesStore().map(toAdminReservation);
+      if (fromServices.length > 0) return delay(fromServices);
 
-      const mapped = mockAdminReservations.map((reservation) => {
-        const credential = servicesByReservation.get(reservation.reservationId);
-        return {
-          ...reservation,
-          ipAddress: credential?.ipAddress ?? null,
-          username: credential?.username ?? null,
-          password: credential?.password ?? null,
-        };
-      });
-
-      return delay(mapped);
+      return delay(mockAdminReservations);
     }
 
     const response = await axios.get<{ data: AdminReservation[] }>(
@@ -320,6 +449,7 @@ export const hardwareApi = {
           ipAddress: payload.ipAddress,
           username: payload.username,
           password: payload.password,
+          ownerPhone: null,
         });
       } else {
         services[index] = {

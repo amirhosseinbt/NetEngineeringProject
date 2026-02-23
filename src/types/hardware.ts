@@ -29,6 +29,7 @@ export interface CalendarDayAvailability {
 }
 
 export interface ReservationPreview {
+  previewId?: string;
   serverId: number;
   unit: RentalUnit;
   startAt: string;
@@ -46,6 +47,7 @@ export interface PurchasedService {
   ipAddress: string | null;
   username: string | null;
   password: string | null;
+  ownerPhone?: string | null;
 }
 
 export interface DashboardStats {
@@ -69,4 +71,18 @@ export interface AdminReservation {
   ipAddress?: string | null;
   username?: string | null;
   password?: string | null;
+}
+
+export interface CheckoutReservationPayload {
+  previewId?: string;
+  serverId: number;
+  unit: RentalUnit;
+  startAt: string;
+  endAt: string;
+  totalAmount: number;
+}
+
+export interface CheckoutReservationResult {
+  success: boolean;
+  reservationId: number;
 }

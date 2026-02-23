@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import ReservationCalendar from "@/components/hardware/ReservationCalendar";
 import type { RentalUnit } from "@/types/hardware";
 
 export default function ReserveClient({ serverId }: { serverId: number }) {
   const [unit, setUnit] = useState<RentalUnit>("HOURLY");
   const [selection, setSelection] = useState<{ startAt: string; endAt: string } | null>(null);
+  const handleSelectionChange = useCallback(
+    (value: { startAt: string; endAt: string } | null) => {
+      setSelection(value);
+    },
+    []
+  );
 
   const checkoutHref = useMemo(() => {
     if (!selection) return "";
@@ -48,7 +54,7 @@ export default function ReserveClient({ serverId }: { serverId: number }) {
         <ReservationCalendar
           serverId={serverId}
           unit={unit}
-          onSelectionChange={(value) => setSelection(value)}
+          onSelectionChange={handleSelectionChange}
         />
 
         <div className="mt-5 muted-panel text-sm font-bold text-slate-700">

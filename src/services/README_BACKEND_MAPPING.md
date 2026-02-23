@@ -36,6 +36,14 @@ Mock source: `src/mocks/hardware.ts`
 - `POST /hardware/reservations/checkout`
 - `GET /hardware/my-services`
 
+Suggested checkout request/response (for direct frontend compatibility):
+
+- request:
+  - `{ "server_id": 1, "unit": "HOURLY", "start_at": "...", "end_at": "...", "total_amount": 1200000 }`
+  - or `{ "preview_id": "..." }` if backend uses preview tokens
+- response:
+  - `{ "data": { "reservation_id": 5010 } }`
+
 ### Admin domain
 
 - `GET /admin/hardware/servers`
@@ -48,3 +56,8 @@ Mock source: `src/mocks/hardware.ts`
 ## Expected frontend types
 
 See: `src/types/hardware.ts`
+
+Notable types used for checkout integration:
+
+- `CheckoutReservationPayload`
+- `CheckoutReservationResult`

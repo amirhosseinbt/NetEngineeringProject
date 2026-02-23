@@ -59,6 +59,7 @@ export const mockMyServices: PurchasedService[] = [
     ipAddress: "185.143.223.10",
     username: "user5001",
     password: "A1b2C3d4",
+    ownerPhone: "09120000001",
   },
   {
     reservationId: 5002,
@@ -69,6 +70,7 @@ export const mockMyServices: PurchasedService[] = [
     ipAddress: null,
     username: null,
     password: null,
+    ownerPhone: "09120000002",
   },
 ];
 
@@ -198,6 +200,7 @@ export function getMockPreview(payload: {
   }
 
   return {
+    previewId: `mock-preview-${payload.serverId}-${payload.startAt}`,
     serverId: payload.serverId,
     unit: payload.unit,
     startAt: payload.startAt,
