@@ -24,6 +24,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  email?: string;
 }
 
 const STORAGE_KEY = "mock_registered_users";
@@ -38,6 +39,7 @@ const AUTH_ENDPOINTS = {
   refreshToken: "/api/refresh-token",
   adminRefreshToken: "/admin/refresh-token",
   profile: "/api/profile",
+  profilePassword: "/api/profile/password",
 } as const;
 
 function getMockUsers(): MockUser[] {
@@ -248,6 +250,7 @@ export const authApi = {
       firstName: response.data.data.first_name,
       lastName: response.data.data.last_name,
       phoneNumber: response.data.data.phone_number,
+      email: response.data.data.email ?? "",
     };
   },
 
@@ -287,6 +290,7 @@ export const authApi = {
         first_name: payload.firstName,
         last_name: payload.lastName,
         phone_number: payload.phoneNumber,
+        email: payload.email ?? "",
       },
       {
         headers: authHeader(),
@@ -294,6 +298,36 @@ export const authApi = {
     );
 
     return { success: true };
+  },
+
+  /**
+   * Update current user password. Pass plain passwords; they are hashed (SHA-256) before sending.
+   */
+  async updatePassword(currentPassword: string, newPassword: string): Promise<void> {
+    const { hashPassword } = await import("@/lib/authCrypto");
+    const [currentHash, newHash] = await Promise.all([
+      hashPassword(currentPassword),
+      hashPassword(newPassword),
+    ]);
+    if (USE_MOCKS) {
+      const phone = getCurrentMockPhoneFromToken();
+      if (!phone) throw new Error("unauthorized");
+      const users = getMockUsers();
+      const currentUser = users.find((item) => item.phoneNumber === phone);
+      if (!currentUser) throw new Error("account not found");
+      const storedHash = currentUser.passwordHash ?? "";
+      if (storedHash !== currentHash) throw new Error("current password is incorrect");
+      const updatedUsers = users.map((item) =>
+        item.id === currentUser.id ? { ...item, passwordHash: newHash } : item
+      );
+      setMockUsers(updatedUsers);
+      return;
+    }
+    await http.patch(
+      AUTH_ENDPOINTS.profilePassword,
+      { current_password: currentHash, new_password: newHash },
+      { headers: authHeader() }
+    );
   },
 };
 

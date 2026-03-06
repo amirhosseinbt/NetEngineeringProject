@@ -8,8 +8,8 @@ import { authApi } from "@/services/authApi";
 
 const links = [
   { href: "/", label: "داشبورد", icon: LayoutGrid },
-  { href: "/hardware", label: "رزرو سخت افزار", icon: Cpu },
   { href: "/profile/edit", label: "حساب کاربری", icon: UserCircle2 },
+  { href: "/hardware", label: "رزرو سخت افزار", icon: Cpu },
 ];
 
 export default function UserSidebar() {
