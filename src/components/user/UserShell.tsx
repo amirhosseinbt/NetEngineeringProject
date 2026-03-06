@@ -3,7 +3,7 @@ import UserSidebar from "@/components/user/UserSidebar";
 
 export default function UserShell({
   children,
-  title = "پنل کاربری سامانه",
+  title = "پنل کاربری اسلات باکس",
 }: {
   children: ReactNode;
   title?: string;

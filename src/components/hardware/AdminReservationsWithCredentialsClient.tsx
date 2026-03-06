@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { hardwareApi } from "@/services/hardwareApi";
+import { getBackendErrorMessage } from "@/lib/apiError";
 import type { AdminReservation } from "@/types/hardware";
 
 interface AdminReservationsWithCredentialsClientProps {
@@ -167,7 +169,7 @@ export default function AdminReservationsWithCredentialsClient({
       setReservations(list);
       setSelectedReservationId((prev) => normalizeReservationId(list, prev));
     } catch (error) {
-      console.log(error);
+      toast.error(getBackendErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -213,8 +215,7 @@ export default function AdminReservationsWithCredentialsClient({
       setMessage("اطلاعات ورود با موفقیت ثبت شد.");
       await refresh();
     } catch (error) {
-      console.log(error);
-      setMessage("ثبت اطلاعات ورود ناموفق بود. دوباره تلاش کنید.");
+      setMessage(getBackendErrorMessage(error));
     } finally {
       setSaving(false);
     }

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { USE_MOCKS, authHeader, http } from "@/services/http";
 import {
   getMockMonthAvailability,
@@ -325,10 +326,17 @@ export const hardwareApi = {
       return delay(services.filter((item) => !item.ownerPhone || item.ownerPhone === phone));
     }
 
-    const response = await http.get<{ data: PurchasedService[] }>(`${ENDPOINTS.userServices}`, {
-      headers: authHeader(),
-    });
-    return response.data.data;
+    try {
+      const response = await http.get<{ data: PurchasedService[] }>(`${ENDPOINTS.userServices}`, {
+        headers: authHeader(),
+      });
+      return response.data?.data ?? [];
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        return [];
+      }
+      throw err;
+    }
   },
 
   async getAdminServers(): Promise<HardwareServer[]> {

@@ -25,7 +25,9 @@ export default function UserDashboardReservations() {
       try {
         setLoading(true);
         const data = await hardwareApi.getMyServices();
-        setItems(data);
+        setItems(data ?? []);
+      } catch {
+        setItems([]);
       } finally {
         setLoading(false);
       }

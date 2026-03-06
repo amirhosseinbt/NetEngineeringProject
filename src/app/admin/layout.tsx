@@ -5,7 +5,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="admin-shell">
       <header className="admin-header">
-        <p className="admin-header-title">پنل مدیریت سامانه</p>
+        <p className="admin-header-title">پنل مدیریت اسلات باکس</p>
       </header>
       <div className="admin-grid">
         <AdminSidebar />

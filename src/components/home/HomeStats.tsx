@@ -59,7 +59,7 @@ export default function HomeStats() {
         <div className="relative z-10">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold text-[#4b64b8]">نمای کلی سامانه</p>
+              <p className="text-xs font-bold text-[#4b64b8]">نمای کلی اسلات باکس</p>
               <p className="mt-1 text-xl font-extrabold text-[#1f2f67] md:text-2xl">داشبورد مدیریتی</p>
             </div>
             <span className="metric-pill">

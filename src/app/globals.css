@@ -165,6 +165,18 @@
     @apply bg-white text-[#2148C0] shadow-[0_8px_18px_rgba(15,23,42,0.18)] border-white;
   }
 
+  .auth-form-card {
+    @apply flex flex-col items-center gap-8 rounded-2xl border border-white/25 bg-white/10 px-8 py-10 shadow-xl backdrop-blur-md w-full max-w-[380px];
+  }
+
+  .auth-form-title {
+    @apply text-white text-lg font-bold text-center w-full;
+  }
+
+  .auth-form-fields {
+    @apply flex flex-col gap-5 w-full;
+  }
+
   .icon-btn {
     @apply inline-flex items-center justify-center rounded-lg bg-white/12 p-2 text-white transition hover:bg-white/20 active:scale-[0.98];
   }

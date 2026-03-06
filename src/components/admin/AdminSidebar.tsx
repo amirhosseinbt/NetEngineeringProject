@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutGrid, ListOrdered, LogOut, Search, ServerCog, Users } from "lucide-react";
 import { toast } from "sonner";
+import { authApi } from "@/services/authApi";
 
 const items = [
   { href: "/admin", label: "داشبورد", icon: LayoutGrid },
@@ -16,8 +17,16 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Still clear local state and redirect
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("token_expiration");
+    localStorage.removeItem("user_role");
     toast.success("خروج از پنل ادمین با موفقیت انجام شد.");
     router.push("/login");
   };

@@ -1,8 +1,19 @@
 'use client'
 import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { authApi } from "@/services/authApi";
 
 const publicRoutes = new Set(["/login", "/register"]);
+const EXPIRATION_DAYS = typeof process.env.NEXT_PUBLIC_EXPIRE_TOKEN !== "undefined"
+  ? parseInt(process.env.NEXT_PUBLIC_EXPIRE_TOKEN, 10) || 1
+  : 1;
+
+function clearAuthStorage() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("token_expiration");
+  localStorage.removeItem("user_role");
+  localStorage.removeItem("refresh_token");
+}
 
 export default function AuthToken({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,13 +45,21 @@ export default function AuthToken({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const expiration = localStorage.getItem('token_expiration');
+    const expiration = localStorage.getItem("token_expiration");
     if (token && expiration && new Date() > new Date(expiration)) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('token_expiration');
-      localStorage.removeItem('is_vip');
-      localStorage.removeItem('user_role');
-      router.push('/login');
+      (async () => {
+        try {
+          const { token: newToken } = await authApi.refreshToken();
+          const expirationDate = new Date(
+            Date.now() + EXPIRATION_DAYS * 24 * 60 * 60 * 1000
+          ).toISOString();
+          localStorage.setItem("token", newToken);
+          localStorage.setItem("token_expiration", expirationDate);
+        } catch {
+          clearAuthStorage();
+          router.push("/login");
+        }
+      })();
     }
   }, [pathname, router]);
 

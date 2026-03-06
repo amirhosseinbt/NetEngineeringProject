@@ -6,6 +6,7 @@ import { UserRound, Phone } from "lucide-react";
 import { toast } from "sonner";
 import Spinner from "@/utils/Spinner";
 import { authApi } from "@/services/authApi";
+import { getBackendErrorMessage } from "@/lib/apiError";
 
 export default function EditProfilePage() {
   const [firstName, setFirstName] = useState("");
@@ -23,8 +24,7 @@ export default function EditProfilePage() {
         setLastName(data.lastName);
         setPhoneNumber(data.phoneNumber);
       } catch (e) {
-        console.log(e);
-        toast.error("بارگذاری اطلاعات کاربر انجام نشد.");
+        toast.error(getBackendErrorMessage(e));
       } finally {
         setLoadingProfile(false);
       }
@@ -48,12 +48,7 @@ export default function EditProfilePage() {
 
       toast.success("اطلاعات حساب کاربری با موفقیت ذخیره شد.");
     } catch (e: unknown) {
-      console.log(e);
-      if (e instanceof Error && e.message === "PHONE_EXISTS") {
-        toast.error("این شماره تلفن قبلا استفاده شده است.");
-      } else {
-        toast.error("ذخیره اطلاعات انجام نشد.");
-      }
+      toast.error(getBackendErrorMessage(e));
     } finally {
       setLoading(false);
     }

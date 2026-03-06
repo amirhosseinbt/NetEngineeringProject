@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { hardwareApi } from "@/services/hardwareApi";
+import { getBackendErrorMessage } from "@/lib/apiError";
 import type { HardwareServer } from "@/types/hardware";
 
 interface ServerForm {
@@ -83,8 +84,7 @@ export default function AdminServersCrudClient() {
       const list = await hardwareApi.getAdminServers();
       setServers(list);
     } catch (error) {
-      console.log(error);
-      toast.error("بارگذاری لیست سرورها انجام نشد.");
+      toast.error(getBackendErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -117,8 +117,7 @@ export default function AdminServersCrudClient() {
       resetForm();
       await refresh();
     } catch (error) {
-      console.log(error);
-      toast.error("عملیات ذخیره سازی انجام نشد.");
+      toast.error(getBackendErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -139,8 +138,7 @@ export default function AdminServersCrudClient() {
       if (editId === serverId) resetForm();
       await refresh();
     } catch (error) {
-      console.log(error);
-      toast.error("حذف سرور انجام نشد.");
+      toast.error(getBackendErrorMessage(error));
     }
   };
 

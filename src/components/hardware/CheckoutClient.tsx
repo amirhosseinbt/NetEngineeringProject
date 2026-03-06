@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { hardwareApi } from "@/services/hardwareApi";
+import { getBackendErrorMessage } from "@/lib/apiError";
 import type { RentalUnit, ReservationPreview } from "@/types/hardware";
 
 interface CheckoutClientProps {
@@ -47,8 +48,7 @@ export default function CheckoutClient({ serverId, unit, startAt, endAt }: Check
       setPaidReservationId(result.reservationId);
       toast.success("رزرو با موفقیت ثبت شد.");
     } catch (error) {
-      console.log(error);
-      toast.error("ثبت رزرو انجام نشد. دوباره تلاش کنید.");
+      toast.error(getBackendErrorMessage(error));
     } finally {
       setPaying(false);
     }
