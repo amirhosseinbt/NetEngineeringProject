@@ -114,8 +114,15 @@ function seeded(serverId: number, year: number, month: number, day: number): num
   return (serverId * 17 + year * 3 + month * 11 + day * 7) % 10;
 }
 
+function toNumericId(serverId: number | string): number {
+  if (typeof serverId === "number") return serverId;
+  let h = 0;
+  for (let i = 0; i < serverId.length; i++) h = (h * 31 + serverId.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export function getMockMonthAvailability(params: {
-  serverId: number;
+  serverId: number | string;
   unit: RentalUnit;
   month: string; // YYYY-MM
 }): CalendarDayAvailability[] {
@@ -123,11 +130,12 @@ export function getMockMonthAvailability(params: {
   const year = Number(yearStr);
   const month = Number(monthStr);
   const days = monthLength(year, month);
+  const numId = toNumericId(params.serverId);
 
   const result: CalendarDayAvailability[] = [];
 
   for (let day = 1; day <= days; day += 1) {
-    const score = seeded(params.serverId, year, month, day);
+    const score = seeded(numId, year, month, day);
 
     let status: CalendarDayAvailability["status"] = "available";
     if (params.unit === "DAILY") {
@@ -146,10 +154,11 @@ export function getMockMonthAvailability(params: {
 }
 
 export function getMockTimeSlots(params: {
-  serverId: number;
+  serverId: number | string;
   unit: RentalUnit;
   date: string; // YYYY-MM-DD
 }): TimeSlot[] {
+  const numId = toNumericId(params.serverId);
   if (params.unit === "DAILY") {
     const start = new Date(`${params.date}T00:00:00`);
     const end = new Date(start);
@@ -168,7 +177,7 @@ export function getMockTimeSlots(params: {
   for (let hour = 8; hour < 24; hour += 2) {
     const start = new Date(year, month - 1, day, hour, 0, 0);
     const end = new Date(year, month - 1, day, hour + 2, 0, 0);
-    const score = (seeded(params.serverId, year, month, day) + hour) % 10;
+    const score = (seeded(numId, year, month, day) + hour) % 10;
 
     slots.push({
       startAt: start.toISOString(),
@@ -181,12 +190,14 @@ export function getMockTimeSlots(params: {
 }
 
 export function getMockPreview(payload: {
-  serverId: number;
+  serverId: number | string;
   unit: RentalUnit;
   startAt: string;
   endAt: string;
 }): ReservationPreview {
-  const server = mockServers.find((s) => s.id === payload.serverId) || mockServers[0];
+  const server =
+    mockServers.find((s) => s.id === payload.serverId || String(s.id) === String(payload.serverId)) ||
+    mockServers[0];
   const start = new Date(payload.startAt);
   const end = new Date(payload.endAt);
 

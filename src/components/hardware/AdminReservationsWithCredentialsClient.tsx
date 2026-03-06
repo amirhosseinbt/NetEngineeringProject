@@ -45,8 +45,12 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat("fa-IR").format(value);
 }
 
+function formatReservationId(id: number | string): string {
+  return typeof id === "number" ? formatNumber(id) : String(id);
+}
+
 function formatReservationLabel(item: AdminReservation): string {
-  return `#${formatNumber(item.reservationId)} - ${item.userFullName}`;
+  return `#${formatReservationId(item.reservationId)} - ${item.userFullName}`;
 }
 
 function formatUserServer(item: AdminReservation): string {
@@ -70,17 +74,17 @@ function formatSelectedMessage(item: AdminReservation | null): string {
   return "برای این رزرو هنوز اطلاعات ورود تنظیم نشده است.";
 }
 
-function toReservationId(value: string): number | null {
+function toReservationId(value: string): number | string | null {
   if (!value) return null;
   const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return null;
-  return parsed;
+  if (Number.isFinite(parsed)) return parsed;
+  return value;
 }
 
 function normalizeReservationId(
   list: AdminReservation[],
-  selectedReservationId: number | null
-): number | null {
+  selectedReservationId: number | string | null
+): number | string | null {
   if (list.length === 0) return null;
   if (selectedReservationId === null) return list[0].reservationId;
   const exists = list.some((item) => item.reservationId === selectedReservationId);
@@ -92,7 +96,12 @@ function rowKey(item: AdminReservation, index: number): string {
 }
 
 function sortReservations(list: AdminReservation[]): AdminReservation[] {
-  return [...list].sort((a, b) => b.reservationId - a.reservationId);
+  return [...list].sort((a, b) => {
+    const x = a.reservationId;
+    const y = b.reservationId;
+    if (typeof x === "number" && typeof y === "number") return y - x;
+    return String(y).localeCompare(String(x));
+  });
 }
 
 function resolveVisibleReservations(list: AdminReservation[], limit?: number): AdminReservation[] {
@@ -155,7 +164,7 @@ export default function AdminReservationsWithCredentialsClient({
 }: AdminReservationsWithCredentialsClientProps) {
   const [reservations, setReservations] = useState<AdminReservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
+  const [selectedReservationId, setSelectedReservationId] = useState<number | string | null>(null);
   const [ipAddress, setIpAddress] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

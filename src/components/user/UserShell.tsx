@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import UserSidebar from "@/components/user/UserSidebar";
+import UserNav from "@/components/user/UserNav";
 
 export default function UserShell({
   children,
@@ -17,15 +17,13 @@ export default function UserShell({
     <div className="user-shell">
       <header className="user-header">
         <p className="user-header-title">{title}</p>
+        <UserNav />
       </header>
-      <div className="user-grid">
-        <UserSidebar />
-        <main className="user-main-card">
-          <div key={pathname} className="user-main-content">
-            {children}
-          </div>
-        </main>
-      </div>
+      <main className="user-main-card user-main-full">
+        <div key={pathname} className="user-main-content">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

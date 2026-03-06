@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { hardwareApi } from "@/services/hardwareApi";
 import type { CalendarDayAvailability, RentalUnit, TimeSlot } from "@/types/hardware";
 
 interface ReservationCalendarProps {
-  serverId: number;
+  serverId: number | string;
   unit: RentalUnit;
   onSelectionChange: (value: { startAt: string; endAt: string } | null) => void;
 }
@@ -99,7 +99,28 @@ function hasReservedSlotBetween(slots: TimeSlot[], startIndex: number, endIndex:
   return false;
 }
 
+function addDays(dateKey: string, days: number): string {
+  const d = parseDateKey(dateKey);
+  d.setDate(d.getDate() + days);
+  return toDateKey(d);
+}
+
+/** Human-readable duration for display (e.g. "۲ ساعت", "۳ روز"). */
+function formatDurationLabel(startAt: string, endAt: string, unit: "HOURLY" | "DAILY"): string {
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "";
+  const diffMs = end.getTime() - start.getTime();
+  if (diffMs <= 0) return "";
+  const hours = Math.round(diffMs / (1000 * 60 * 60));
+  const days = Math.round(diffMs / (1000 * 60 * 60 * 24));
+  if (unit === "DAILY" && days >= 1) return `${days.toLocaleString("fa-IR")} روز`;
+  if (hours < 24) return `${hours.toLocaleString("fa-IR")} ساعت`;
+  return `${days.toLocaleString("fa-IR")} روز`;
+}
+
 const weekDays = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+const DAILY_DURATION_OPTIONS = [1, 2, 3, 4, 5, 6, 7] as const;
 
 export default function ReservationCalendar({ serverId, unit, onSelectionChange }: ReservationCalendarProps) {
   const [displayMonth, setDisplayMonth] = useState<Date>(() => startOfMonth(new Date()));
@@ -114,6 +135,8 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
 
   const [dayStartKey, setDayStartKey] = useState<string | null>(null);
   const [dayEndKey, setDayEndKey] = useState<string | null>(null);
+  /** For DAILY: number of days to reserve (1–7). User picks duration then clicks start day. */
+  const [dailyDurationDays, setDailyDurationDays] = useState<number>(1);
 
   const availabilityMap = useMemo(() => {
     const map: Record<string, CalendarDayAvailability["status"]> = {};
@@ -176,6 +199,40 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
     run();
   }, [onSelectionChange, selectedDateKey, serverId, unit]);
 
+  const applyDailySelection = useCallback(
+    (startKey: string, endKey: string) => {
+      if (isRangeBlocked(startKey, endKey, availabilityMap)) {
+        toast.error("در بازه انتخابی روز رزرو شده وجود دارد.");
+        return;
+      }
+      setDayStartKey(startKey);
+      setDayEndKey(endKey);
+      const start = parseDateKey(startKey);
+      const end = parseDateKey(endKey);
+      end.setDate(end.getDate() + 1);
+      onSelectionChange({ startAt: start.toISOString(), endAt: end.toISOString() });
+    },
+    [availabilityMap, onSelectionChange]
+  );
+
+  const handleDailyDurationChange = useCallback(
+    (days: number) => {
+      setDailyDurationDays(days);
+      if (!dayStartKey) return;
+      const endKey = addDays(dayStartKey, days - 1);
+      if (isRangeBlocked(dayStartKey, endKey, availabilityMap)) {
+        toast.error("در بازه انتخابی روز رزرو شده وجود دارد.");
+        return;
+      }
+      setDayEndKey(endKey);
+      const start = parseDateKey(dayStartKey);
+      const end = parseDateKey(endKey);
+      end.setDate(end.getDate() + 1);
+      onSelectionChange({ startAt: start.toISOString(), endAt: end.toISOString() });
+    },
+    [dayStartKey, availabilityMap, onSelectionChange]
+  );
+
   const handleDayClick = (dateKey: string) => {
     const status = availabilityMap[dateKey];
     if (!status || status === "reserved") return;
@@ -185,38 +242,9 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
       return;
     }
 
-    if (!dayStartKey || (dayStartKey && dayEndKey && dayStartKey !== dayEndKey)) {
-      setDayStartKey(dateKey);
-      setDayEndKey(dateKey);
-      const start = parseDateKey(dateKey);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
-      onSelectionChange({ startAt: start.toISOString(), endAt: end.toISOString() });
-      return;
-    }
-
-    const startKey = dayStartKey <= dateKey ? dayStartKey : dateKey;
-    const endKey = dayStartKey <= dateKey ? dateKey : dayStartKey;
-
-    if (isRangeBlocked(startKey, endKey, availabilityMap)) {
-      toast.error("در بازه انتخابی روز رزرو شده وجود دارد.");
-      setDayStartKey(dateKey);
-      setDayEndKey(dateKey);
-      const start = parseDateKey(dateKey);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
-      onSelectionChange({ startAt: start.toISOString(), endAt: end.toISOString() });
-      return;
-    }
-
-    setDayStartKey(startKey);
-    setDayEndKey(endKey);
-
-    const start = parseDateKey(startKey);
-    const end = parseDateKey(endKey);
-    end.setDate(end.getDate() + 1);
-
-    onSelectionChange({ startAt: start.toISOString(), endAt: end.toISOString() });
+    // DAILY: one click = start day; end = start + (duration - 1) days
+    const endKey = addDays(dateKey, dailyDurationDays - 1);
+    applyDailySelection(dateKey, endKey);
   };
 
   const handleSlotClick = (index: number) => {
@@ -323,27 +351,61 @@ export default function ReservationCalendar({ serverId, unit, onSelectionChange 
       <div className="muted-panel">
         {unit === "DAILY" && (
           <div className="space-y-3 text-sm font-bold text-slate-700">
-            <p>رزرو روزانه:</p>
-            <p>روی روزهای آزاد کلیک کنید تا بازه انتخاب شود.</p>
+            <p className="text-slate-800">رزرو روزانه</p>
+            <p className="text-slate-600 font-normal text-xs">
+              مدت رزرو را انتخاب کنید، سپس روز شروع را در تقویم کلیک کنید.
+            </p>
+            <div className="rounded-md bg-white p-3 space-y-2">
+              <label htmlFor="calendar-duration-days" className="block text-slate-700">
+                مدت رزرو (روز)
+              </label>
+              <select
+                id="calendar-duration-days"
+                value={dailyDurationDays}
+                onChange={(e) => handleDailyDurationChange(Number(e.target.value))}
+                className="calendar-duration-select"
+                dir="rtl"
+              >
+                {DAILY_DURATION_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n.toLocaleString("fa-IR")} روز
+                  </option>
+                ))}
+              </select>
+            </div>
             {dayStartKey && dayEndKey ? (
-              <div className="rounded-md bg-white p-3">
+              <div className="rounded-md bg-white p-3 space-y-1">
                 <p>از: {formatDateLabel(dayStartKey)}</p>
                 <p>تا: {formatDateLabel(dayEndKey)}</p>
+                <p className="text-[#244BC5] font-bold pt-1">
+                  مدت انتخاب شده: {formatDurationLabel(
+                    parseDateKey(dayStartKey).toISOString(),
+                    new Date(parseDateKey(dayEndKey).getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                    "DAILY"
+                  )}
+                </p>
               </div>
             ) : (
-              <p className="rounded-md bg-white p-3">هنوز بازه ای انتخاب نشده است.</p>
+              <p className="rounded-md bg-white p-3 text-slate-500 font-normal">روز شروع را در تقویم کلیک کنید.</p>
             )}
           </div>
         )}
 
         {unit === "HOURLY" && (
           <div className="space-y-3">
-            <p className="text-sm font-bold text-slate-700">رزرو ساعتی:</p>
-            <p className="text-sm font-bold text-slate-700">ابتدا یک روز انتخاب کنید سپس بازه زمانی را بردارید.</p>
+            <p className="text-sm font-bold text-slate-700">رزرو ساعتی</p>
+            <p className="text-xs text-slate-600 font-normal">
+              برای انتخاب مدت: ابتدا یک روز انتخاب کنید، سپس ساعت شروع و ساعت پایان را کلیک کنید (بازه زمانی).
+            </p>
 
             {selectedDateKey && (
               <p className="rounded-md bg-white p-2 text-sm font-bold text-slate-700">
                 تاریخ انتخابی: {formatDateLabel(selectedDateKey)}
+              </p>
+            )}
+            {slotStartIndex !== null && slotEndIndex !== null && slots[slotStartIndex] && slots[slotEndIndex] && (
+              <p className="text-sm font-bold text-[#244BC5] rounded-md bg-white p-2">
+                مدت انتخاب شده: {formatDurationLabel(slots[slotStartIndex].startAt, slots[slotEndIndex].endAt, "HOURLY")}
               </p>
             )}
 

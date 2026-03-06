@@ -13,10 +13,10 @@ export default async function CheckoutPage({
 
   return (
     <CheckoutClient
-      serverId={Number(reservationId)}
+      serverId={reservationId}
       unit={query.unit || "HOURLY"}
-      startAt={query.startAt || "2026-02-24T10:00:00.000Z"}
-      endAt={query.endAt || "2026-02-24T12:00:00.000Z"}
+      startAt={query.startAt || ""}
+      endAt={query.endAt || ""}
     />
   );
 }

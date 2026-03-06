@@ -19,20 +19,35 @@ import type {
   CheckoutReservationResult,
   DashboardStats,
   HardwareServer,
+  PaginatedServersResult,
   PurchasedService,
   RentalUnit,
   ReservationPreview,
   TimeSlot,
 } from "@/types/hardware";
 
+/** Backend API server shape (snake_case, id string). */
+interface RawServer {
+  id: string;
+  name: string;
+  cpu: string;
+  gpu: string;
+  ram_gb: number;
+  disk_gb: number;
+  os: string;
+  hourly_price: number;
+  daily_price: number;
+  status: string;
+}
+
 const ENDPOINTS = {
-  dashboardStats: "/dashboard/stats",
-  serverList: "/hardware/servers",
-  serverMonthAvailability: (serverId: number) => `/hardware/servers/${serverId}/calendar`,
-  serverTimeSlots: (serverId: number) => `/hardware/servers/${serverId}/timeslots`,
-  reservationPreview: "/hardware/reservations/preview",
-  reservationCheckout: "/hardware/reservations/checkout",
-  userServices: "/hardware/my-services",
+  dashboardStats: "/api/dashboard/stats",
+  serverList: "/api/hardware/servers",
+  serverMonthAvailability: (serverId: number | string) => `/api/hardware/servers/${serverId}/calendar`,
+  serverTimeSlots: (serverId: number | string) => `/api/hardware/servers/${serverId}/timeslots`,
+  reservationPreview: "/api/hardware/reservations/preview",
+  reservationCheckout: "/api/hardware/reservations/checkout",
+  userServices: "/api/hardware/my-services",
   adminServers: "/admin/hardware/servers",
   adminUsers: "/admin/users",
   adminReservations: "/admin/hardware/reservations",
@@ -51,14 +66,25 @@ function delay<T>(data: T, ms = 250): Promise<T> {
 
 function applyServerFilters(
   servers: HardwareServer[],
-  params: { basis?: BuildBasis; cpu?: string; gpu?: string }
+  params: { basis?: BuildBasis; cpu?: string; gpu?: string; q?: string; status?: string }
 ): HardwareServer[] {
   return servers.filter((server) => {
-    if (params.basis === "CPU" && params.cpu) {
-      return server.cpu.toLowerCase().includes(params.cpu.toLowerCase());
+    const q = (params.q ?? "").trim().toLowerCase();
+    if (q) {
+      const match =
+        server.name.toLowerCase().includes(q) ||
+        server.cpu.toLowerCase().includes(q) ||
+        server.gpu.toLowerCase().includes(q);
+      if (!match) return false;
     }
-    if (params.basis === "GPU" && params.gpu) {
-      return server.gpu.toLowerCase().includes(params.gpu.toLowerCase());
+    if (params.status && params.status !== "") {
+      if (server.status !== params.status) return false;
+    }
+    if (params.basis === "CPU" && params.cpu?.trim()) {
+      if (!server.cpu.toLowerCase().includes(params.cpu.trim().toLowerCase())) return false;
+    }
+    if (params.basis === "GPU" && params.gpu?.trim()) {
+      if (!server.gpu.toLowerCase().includes(params.gpu.trim().toLowerCase())) return false;
     }
     return true;
   });
@@ -173,54 +199,153 @@ export const hardwareApi = {
       return delay({ usersCount, serversCount, purchasesCount });
     }
 
-    const response = await http.get<{ data: DashboardStats }>(`${ENDPOINTS.dashboardStats}`, {
+    const response = await http.get(ENDPOINTS.dashboardStats, {
       headers: authHeader(),
     });
-    return response.data.data;
+    const body = response.data as { data?: DashboardStats } | DashboardStats;
+    const stats = (body && typeof body === "object" && "data" in body ? body.data : body) as DashboardStats;
+    return {
+      usersCount: Number(stats?.usersCount) || 0,
+      serversCount: Number(stats?.serversCount) || 0,
+      purchasesCount: Number(stats?.purchasesCount) || 0,
+    };
   },
 
-  async getServers(params: { basis?: BuildBasis; cpu?: string; gpu?: string }): Promise<HardwareServer[]> {
-    if (USE_MOCKS) return delay(applyServerFilters(getMockServersStore(), params));
+  async getServers(params: {
+    basis?: BuildBasis;
+    cpu?: string;
+    gpu?: string;
+    page?: number;
+    page_size?: number;
+    q?: string;
+    status?: "AVAILABLE" | "MAINTENANCE" | "DISABLED";
+  }): Promise<PaginatedServersResult> {
+    if (USE_MOCKS) {
+      const filtered = applyServerFilters(getMockServersStore(), params);
+      const page = Math.max(1, params.page ?? 1);
+      const pageSize = Math.min(100, Math.max(1, params.page_size ?? 20));
+      const start = (page - 1) * pageSize;
+      const items = filtered.slice(start, start + pageSize);
+      return delay({
+        items,
+        total: filtered.length,
+        page,
+        pageSize,
+      });
+    }
 
-    const response = await http.get<{ data: HardwareServer[] }>(`${ENDPOINTS.serverList}`, {
-      params,
+    const requestParams: Record<string, string | number | undefined> = {};
+    if (params.page != null) requestParams.page = params.page;
+    if (params.page_size != null) requestParams.page_size = params.page_size;
+    if (params.q != null && params.q.trim() !== "") requestParams.q = params.q.trim();
+    if (params.status) requestParams.status = params.status;
+    if (params.cpu != null && params.cpu.trim() !== "") requestParams.cpu = params.cpu.trim();
+    if (params.gpu != null && params.gpu.trim() !== "") requestParams.gpu = params.gpu.trim();
+
+    const response = await http.get(ENDPOINTS.serverList, {
+      params: requestParams,
       headers: authHeader(),
     });
-    return response.data.data;
+
+    // Backend may wrap as { data: { data: [...], total, page, page_size } } or { data: [...] }
+    type PageResponse = { data?: RawServer[]; total?: number; page?: number; page_size?: number };
+    const envelope = response.data as PageResponse | { data?: PageResponse };
+    const page: PageResponse = envelope && typeof envelope.data === "object" && !Array.isArray(envelope.data)
+      ? (envelope.data as PageResponse)
+      : (envelope as PageResponse);
+    const arr: RawServer[] = Array.isArray(page.data) ? page.data : [];
+    const list: HardwareServer[] = arr.map((s) => ({
+      id: s.id,
+      name: s.name,
+      cpu: s.cpu,
+      gpu: s.gpu,
+      ramGb: s.ram_gb,
+      diskGb: s.disk_gb,
+      os: s.os,
+      hourlyPrice: s.hourly_price,
+      dailyPrice: s.daily_price,
+      status: (s.status === "AVAILABLE" || s.status === "MAINTENANCE" || s.status === "DISABLED" ? s.status : "AVAILABLE") as HardwareServer["status"],
+    }));
+    return {
+      items: list,
+      total: Number(page.total) || 0,
+      page: Number(page.page) || 1,
+      pageSize: Number(page.page_size) || 20,
+    };
   },
 
-  async getServerTimeSlots(serverId: number, params: { unit: RentalUnit; date: string }): Promise<TimeSlot[]> {
+  async getServer(serverId: number | string): Promise<HardwareServer | null> {
+    if (USE_MOCKS) {
+      const servers = getMockServersStore();
+      const s = servers.find((x) => x.id === serverId || String(x.id) === String(serverId));
+      return delay(s ?? null);
+    }
+    try {
+      const response = await http.get<{ data: RawServer }>(`${ENDPOINTS.serverList}/${serverId}`, {
+        headers: authHeader(),
+      });
+      const raw = response?.data?.data ?? response?.data;
+      if (!raw || typeof raw !== "object") return null;
+      const s = raw as RawServer;
+      return {
+        id: s.id,
+        name: s.name,
+        cpu: s.cpu,
+        gpu: s.gpu,
+        ramGb: s.ram_gb,
+        diskGb: s.disk_gb,
+        os: s.os,
+        hourlyPrice: s.hourly_price,
+        dailyPrice: s.daily_price,
+        status: (s.status === "AVAILABLE" || s.status === "MAINTENANCE" || s.status === "DISABLED"
+          ? s.status
+          : "AVAILABLE") as HardwareServer["status"],
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  async getServerTimeSlots(serverId: number | string, params: { unit: RentalUnit; date: string }): Promise<TimeSlot[]> {
     if (USE_MOCKS) {
       return delay(getMockTimeSlots({ serverId, unit: params.unit, date: params.date }));
     }
 
-    const response = await http.get<{ data: TimeSlot[] }>(`${ENDPOINTS.serverTimeSlots(serverId)}`, {
+    const response = await http.get(`${ENDPOINTS.serverTimeSlots(serverId)}`, {
       params,
       headers: authHeader(),
     });
-    return response.data.data;
+    const raw = response?.data?.data ?? response?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((s: { start_at?: string; end_at?: string; is_reserved?: boolean; startAt?: string; endAt?: string; isReserved?: boolean }) => ({
+      startAt: s.start_at ?? s.startAt ?? "",
+      endAt: s.end_at ?? s.endAt ?? "",
+      isReserved: s.is_reserved ?? s.isReserved ?? false,
+    }));
   },
 
   async getMonthAvailability(
-    serverId: number,
+    serverId: number | string,
     params: { unit: RentalUnit; month: string }
   ): Promise<CalendarDayAvailability[]> {
     if (USE_MOCKS) {
       return delay(getMockMonthAvailability({ serverId, unit: params.unit, month: params.month }));
     }
 
-    const response = await http.get<{ data: CalendarDayAvailability[] }>(
-      `${ENDPOINTS.serverMonthAvailability(serverId)}`,
-      {
-        params,
-        headers: authHeader(),
-      }
-    );
-    return response.data.data;
+    const response = await http.get(`${ENDPOINTS.serverMonthAvailability(serverId)}`, {
+      params,
+      headers: authHeader(),
+    });
+    const raw = response?.data?.data ?? response?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((d: { date?: string; status?: string }) => ({
+      date: d.date ?? "",
+      status: (d.status === "available" || d.status === "partial" || d.status === "reserved" ? d.status : "available") as CalendarDayAvailability["status"],
+    }));
   },
 
   async getReservationPreview(payload: {
-    serverId: number;
+    serverId: number | string;
     unit: RentalUnit;
     startAt: string;
     endAt: string;
@@ -232,14 +357,16 @@ export const hardwareApi = {
     });
     const data = response?.data?.data ?? response?.data;
 
-    const serverId = Number(data?.serverId ?? data?.server_id ?? payload.serverId);
+    const rawServerId = data?.serverId ?? data?.server_id ?? payload.serverId;
+    const serverId = typeof rawServerId === "string" ? rawServerId : Number(rawServerId);
     const unit = (data?.unit ?? payload.unit) as RentalUnit;
     const startAt = String(data?.startAt ?? data?.start_at ?? payload.startAt);
     const endAt = String(data?.endAt ?? data?.end_at ?? payload.endAt);
     const totalAmount = Number(data?.totalAmount ?? data?.total_amount ?? 0);
     const previewId = data?.previewId ?? data?.preview_id;
 
-    if (!Number.isFinite(serverId) || !startAt || !endAt || !Number.isFinite(totalAmount)) {
+    const validServerId = typeof serverId === "number" ? Number.isFinite(serverId) : serverId.length > 0;
+    if (!validServerId || !startAt || !endAt || !Number.isFinite(totalAmount)) {
       throw new Error("INVALID_PREVIEW_RESPONSE");
     }
 
@@ -259,8 +386,10 @@ export const hardwareApi = {
       const services = getMockMyServicesStore();
       const servers = getMockServersStore();
       const currentPhone = getCurrentMockPhoneFromToken();
-      const nextReservationId =
-        services.length > 0 ? Math.max(...services.map((item) => item.reservationId)) + 1 : 5001;
+      const numericIds = services
+        .map((item) => (typeof item.reservationId === "number" ? item.reservationId : 0))
+        .filter((n) => n > 0);
+      const nextReservationId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 5001;
       const server = servers.find((item) => item.id === payload.serverId);
 
       const created: PurchasedService = {
@@ -307,11 +436,11 @@ export const hardwareApi = {
       response?.data?.reservation_id ??
       response?.data?.reservationId;
 
-    if (typeof reservationId !== "number") {
+    if (reservationId == null || (typeof reservationId === "string" && reservationId.trim() === "")) {
       throw new Error("INVALID_CHECKOUT_RESPONSE");
     }
 
-    return { success: true, reservationId };
+    return { success: true, reservationId: reservationId as number | string };
   },
 
   async getMyServices(): Promise<PurchasedService[]> {
@@ -327,10 +456,21 @@ export const hardwareApi = {
     }
 
     try {
-      const response = await http.get<{ data: PurchasedService[] }>(`${ENDPOINTS.userServices}`, {
+      const response = await http.get(ENDPOINTS.userServices, {
         headers: authHeader(),
       });
-      return response.data?.data ?? [];
+      const raw = response.data?.data ?? response.data;
+      const arr = Array.isArray(raw) ? raw : [];
+      return arr.map((item: Record<string, unknown>) => ({
+        reservationId: item.reservation_id ?? item.reservationId,
+        serverName: item.server_name ?? item.serverName ?? "",
+        startAt: item.start_at ?? item.startAt ?? "",
+        endAt: item.end_at ?? item.endAt ?? "",
+        totalAmount: Number(item.total_amount ?? item.totalAmount ?? 0),
+        ipAddress: (item.ip_address ?? item.ipAddress) ?? null,
+        username: (item.username ?? item.username) ?? null,
+        password: (item.password ?? item.password) ?? null,
+      })) as PurchasedService[];
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
         return [];
@@ -351,7 +491,10 @@ export const hardwareApi = {
   async createAdminServer(payload: Omit<HardwareServer, "id">): Promise<HardwareServer> {
     if (USE_MOCKS) {
       const servers = getMockServersStore();
-      const nextId = servers.length > 0 ? Math.max(...servers.map((item) => item.id)) + 1 : 1;
+      const numericIds = servers
+        .map((item) => (typeof item.id === "number" ? item.id : 0))
+        .filter((n) => n > 0);
+      const nextId = numericIds.length > 0 ? Math.max(...numericIds) + 1 : 1;
       const created: HardwareServer = { id: nextId, ...payload };
       const updated = [...servers, created];
       setMockServersStore(updated);
@@ -429,7 +572,7 @@ export const hardwareApi = {
   },
 
   async assignServiceCredentials(payload: {
-    reservationId: number;
+    reservationId: number | string;
     username: string;
     password: string;
     ipAddress: string;

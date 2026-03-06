@@ -6,5 +6,5 @@ export default async function ReservePage({
   params: Promise<{ serverId: string }>;
 }) {
   const { serverId } = await params;
-  return <ReserveClient serverId={Number(serverId)} />;
+  return <ReserveClient serverId={serverId} />;
 }
