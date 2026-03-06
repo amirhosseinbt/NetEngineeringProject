@@ -3,7 +3,8 @@ export type BuildBasis = "CPU" | "GPU";
 export type RentalUnit = "HOURLY" | "DAILY";
 
 export interface HardwareServer {
-  id: number;
+  /** Mock: number; Real API: UUID string */
+  id: number | string;
   name: string;
   cpu: string;
   gpu: string;
@@ -13,6 +14,13 @@ export interface HardwareServer {
   hourlyPrice: number;
   dailyPrice: number;
   status: "AVAILABLE" | "MAINTENANCE" | "DISABLED";
+}
+
+export interface PaginatedServersResult {
+  items: HardwareServer[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface TimeSlot {
@@ -30,7 +38,8 @@ export interface CalendarDayAvailability {
 
 export interface ReservationPreview {
   previewId?: string;
-  serverId: number;
+  /** Mock: number; Real API: UUID string */
+  serverId: number | string;
   unit: RentalUnit;
   startAt: string;
   endAt: string;
@@ -39,7 +48,8 @@ export interface ReservationPreview {
 }
 
 export interface PurchasedService {
-  reservationId: number;
+  /** API returns UUID string */
+  reservationId: number | string;
   serverName: string;
   startAt: string;
   endAt: string;
@@ -57,17 +67,23 @@ export interface DashboardStats {
 }
 
 export interface AdminUser {
-  id: number;
+  /** API returns UUID string */
+  id: number | string;
   fullName: string;
   phoneNumber: string;
+  email?: string;
+  createdAt?: string;
 }
 
 export interface AdminReservation {
-  reservationId: number;
+  /** API may return UUID string */
+  reservationId: number | string;
   userFullName: string;
+  userPhone?: string;
   serverName: string;
   startAt: string;
   endAt: string;
+  totalAmount?: number;
   ipAddress?: string | null;
   username?: string | null;
   password?: string | null;
@@ -75,7 +91,7 @@ export interface AdminReservation {
 
 export interface CheckoutReservationPayload {
   previewId?: string;
-  serverId: number;
+  serverId: number | string;
   unit: RentalUnit;
   startAt: string;
   endAt: string;
@@ -84,5 +100,6 @@ export interface CheckoutReservationPayload {
 
 export interface CheckoutReservationResult {
   success: boolean;
-  reservationId: number;
+  /** Mock: number; Real API: UUID string */
+  reservationId: number | string;
 }

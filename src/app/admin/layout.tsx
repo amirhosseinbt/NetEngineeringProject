@@ -1,16 +1,23 @@
+"use client";
+
 import type { ReactNode } from "react";
-import AdminSidebar from "@/components/admin/AdminSidebar";
+import { usePathname } from "next/navigation";
+import AdminNav from "@/components/admin/AdminNav";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
   return (
-    <div className="admin-shell">
-      <header className="admin-header">
-        <p className="admin-header-title">پنل مدیریت سامانه</p>
+    <div className="admin-shell-new">
+      <header className="admin-header-new">
+        <p className="admin-header-title-new">پنل مدیریت اسلات باکس</p>
+        <AdminNav />
       </header>
-      <div className="admin-grid">
-        <AdminSidebar />
-        <main className="admin-main-card">{children}</main>
-      </div>
+      <main className="admin-main-new">
+        <div key={pathname} className="admin-main-content">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }

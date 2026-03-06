@@ -20,10 +20,9 @@ export default function UserDiscount() {
                 setLoading(true);
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/client/discountCode`, {headers: {Authorization: token}});
                 setUserDiscount(response.data.data);
-                console.log(response);
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }

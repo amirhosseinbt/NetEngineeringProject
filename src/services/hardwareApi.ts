@@ -1,14 +1,5 @@
-import { USE_MOCKS, authHeader, http } from "@/services/http";
-import {
-  getMockMonthAvailability,
-  getMockPreview,
-  getMockTimeSlots,
-  mockAdminReservations,
-  mockAdminUsers,
-  mockMyServices,
-  mockServers,
-  mockStats,
-} from "@/mocks/hardware";
+import axios from "axios";
+import { authHeader, http } from "@/services/http";
 import type {
   AdminReservation,
   AdminUser,
@@ -18,227 +9,172 @@ import type {
   CheckoutReservationResult,
   DashboardStats,
   HardwareServer,
+  PaginatedServersResult,
   PurchasedService,
   RentalUnit,
   ReservationPreview,
   TimeSlot,
 } from "@/types/hardware";
 
+interface RawServer {
+  id: string;
+  name: string;
+  cpu: string;
+  gpu: string;
+  ram_gb: number;
+  disk_gb: number;
+  os: string;
+  hourly_price: number;
+  daily_price: number;
+  status: string;
+}
+
 const ENDPOINTS = {
-  dashboardStats: "/dashboard/stats",
-  serverList: "/hardware/servers",
-  serverMonthAvailability: (serverId: number) => `/hardware/servers/${serverId}/calendar`,
-  serverTimeSlots: (serverId: number) => `/hardware/servers/${serverId}/timeslots`,
-  reservationPreview: "/hardware/reservations/preview",
-  reservationCheckout: "/hardware/reservations/checkout",
-  userServices: "/hardware/my-services",
+  dashboardStats: "/api/dashboard/stats",
+  serverList: "/api/hardware/servers",
+  serverMonthAvailability: (serverId: number | string) => `/api/hardware/servers/${serverId}/calendar`,
+  serverTimeSlots: (serverId: number | string) => `/api/hardware/servers/${serverId}/timeslots`,
+  reservationPreview: "/api/hardware/reservations/preview",
+  reservationCheckout: "/api/hardware/reservations/checkout",
+  userServices: "/api/hardware/my-services",
   adminServers: "/admin/hardware/servers",
   adminUsers: "/admin/users",
   adminReservations: "/admin/hardware/reservations",
   adminCredentials: "/admin/hardware/credentials",
 };
 
-const MOCK_SERVERS_STORAGE_KEY = "mock_admin_servers";
-const MOCK_MY_SERVICES_STORAGE_KEY = "mock_my_services";
-const MOCK_USERS_STORAGE_KEY = "mock_registered_users";
-
-function delay<T>(data: T, ms = 250): Promise<T> {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(data), ms);
-  });
-}
-
-function applyServerFilters(
-  servers: HardwareServer[],
-  params: { basis?: BuildBasis; cpu?: string; gpu?: string }
-): HardwareServer[] {
-  return servers.filter((server) => {
-    if (params.basis === "CPU" && params.cpu) {
-      return server.cpu.toLowerCase().includes(params.cpu.toLowerCase());
-    }
-    if (params.basis === "GPU" && params.gpu) {
-      return server.gpu.toLowerCase().includes(params.gpu.toLowerCase());
-    }
-    return true;
-  });
-}
-
-function getMockServersStore(): HardwareServer[] {
-  if (typeof window === "undefined") return [...mockServers];
-  const raw = localStorage.getItem(MOCK_SERVERS_STORAGE_KEY);
-  if (!raw) {
-    localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(mockServers));
-    return [...mockServers];
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...mockServers];
-    return parsed as HardwareServer[];
-  } catch {
-    return [...mockServers];
-  }
-}
-
-function setMockServersStore(servers: HardwareServer[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(MOCK_SERVERS_STORAGE_KEY, JSON.stringify(servers));
-}
-
-function getMockMyServicesStore(): PurchasedService[] {
-  if (typeof window === "undefined") return [...mockMyServices];
-  const raw = localStorage.getItem(MOCK_MY_SERVICES_STORAGE_KEY);
-  if (!raw) {
-    localStorage.setItem(MOCK_MY_SERVICES_STORAGE_KEY, JSON.stringify(mockMyServices));
-    return [...mockMyServices];
-  }
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [...mockMyServices];
-    return parsed as PurchasedService[];
-  } catch {
-    return [...mockMyServices];
-  }
-}
-
-function setMockMyServicesStore(services: PurchasedService[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(MOCK_MY_SERVICES_STORAGE_KEY, JSON.stringify(services));
-}
-
-function getCurrentMockPhoneFromToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  const prefix = "mock-token-";
-  if (!token.startsWith(prefix)) return null;
-  return token.slice(prefix.length);
-}
-
-function getCurrentRole(): "admin" | "user" {
-  if (typeof window === "undefined") return "user";
-  return localStorage.getItem("user_role") === "admin" ? "admin" : "user";
-}
-
-function getMockRegisteredUsers(): Array<{ firstName: string; lastName: string; phoneNumber: string }> {
-  if (typeof window === "undefined") return [];
-  const raw = localStorage.getItem(MOCK_USERS_STORAGE_KEY);
-  if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed as Array<{ firstName: string; lastName: string; phoneNumber: string }>;
-  } catch {
-    return [];
-  }
-}
-
-function resolveMockUserFullName(phoneNumber: string | null | undefined): string {
-  if (!phoneNumber) return "کاربر ناشناس";
-
-  const fromAdminUsers = mockAdminUsers.find((item) => item.phoneNumber === phoneNumber);
-  if (fromAdminUsers) return fromAdminUsers.fullName;
-
-  const fromRegisteredUsers = getMockRegisteredUsers().find((item) => item.phoneNumber === phoneNumber);
-  if (fromRegisteredUsers) return `${fromRegisteredUsers.firstName} ${fromRegisteredUsers.lastName}`.trim();
-
-  return "کاربر ناشناس";
-}
-
-function toAdminReservation(service: PurchasedService): AdminReservation {
+function mapRawServer(s: RawServer): HardwareServer {
   return {
-    reservationId: service.reservationId,
-    userFullName: resolveMockUserFullName(service.ownerPhone),
-    serverName: service.serverName,
-    startAt: service.startAt,
-    endAt: service.endAt,
-    ipAddress: service.ipAddress,
-    username: service.username,
-    password: service.password,
+    id: s.id,
+    name: s.name,
+    cpu: s.cpu,
+    gpu: s.gpu,
+    ramGb: s.ram_gb,
+    diskGb: s.disk_gb,
+    os: s.os,
+    hourlyPrice: s.hourly_price,
+    dailyPrice: s.daily_price,
+    status: (s.status === "AVAILABLE" || s.status === "MAINTENANCE" || s.status === "DISABLED"
+      ? s.status
+      : "AVAILABLE") as HardwareServer["status"],
   };
 }
 
 export const hardwareApi = {
   async getDashboardStats(): Promise<DashboardStats> {
-    if (USE_MOCKS) {
-      const services = getMockMyServicesStore();
-      const registered = getMockRegisteredUsers();
-      const usersCount = Math.max(mockStats.usersCount, mockAdminUsers.length, registered.length);
-      const serversCount = getMockServersStore().length;
-      const purchasesCount = services.length;
-      return delay({ usersCount, serversCount, purchasesCount });
-    }
-
-    const response = await http.get<{ data: DashboardStats }>(`${ENDPOINTS.dashboardStats}`, {
+    const response = await http.get(ENDPOINTS.dashboardStats, {
       headers: authHeader(),
     });
-    return response.data.data;
+    const body = response.data as { data?: DashboardStats } | DashboardStats;
+    const stats = (body && typeof body === "object" && "data" in body ? body.data : body) as DashboardStats;
+    return {
+      usersCount: Number(stats?.usersCount) || 0,
+      serversCount: Number(stats?.serversCount) || 0,
+      purchasesCount: Number(stats?.purchasesCount) || 0,
+    };
   },
 
-  async getServers(params: { basis?: BuildBasis; cpu?: string; gpu?: string }): Promise<HardwareServer[]> {
-    if (USE_MOCKS) return delay(applyServerFilters(getMockServersStore(), params));
+  async getServers(params: {
+    basis?: BuildBasis;
+    cpu?: string;
+    gpu?: string;
+    page?: number;
+    page_size?: number;
+    q?: string;
+    status?: "AVAILABLE" | "MAINTENANCE" | "DISABLED";
+  }): Promise<PaginatedServersResult> {
+    const requestParams: Record<string, string | number | undefined> = {};
+    if (params.page != null) requestParams.page = params.page;
+    if (params.page_size != null) requestParams.page_size = params.page_size;
+    if (params.q != null && params.q.trim() !== "") requestParams.q = params.q.trim();
+    if (params.status) requestParams.status = params.status;
+    if (params.cpu != null && params.cpu.trim() !== "") requestParams.cpu = params.cpu.trim();
+    if (params.gpu != null && params.gpu.trim() !== "") requestParams.gpu = params.gpu.trim();
 
-    const response = await http.get<{ data: HardwareServer[] }>(`${ENDPOINTS.serverList}`, {
+    const response = await http.get(ENDPOINTS.serverList, {
+      params: requestParams,
+      headers: authHeader(),
+    });
+
+    type PageResponse = { data?: RawServer[]; total?: number; page?: number; page_size?: number };
+    const envelope = response.data as PageResponse | { data?: PageResponse };
+    const page: PageResponse = envelope && typeof envelope.data === "object" && !Array.isArray(envelope.data)
+      ? (envelope.data as PageResponse)
+      : (envelope as PageResponse);
+    const arr: RawServer[] = Array.isArray(page.data) ? page.data : [];
+
+    return {
+      items: arr.map(mapRawServer),
+      total: Number(page.total) || 0,
+      page: Number(page.page) || 1,
+      pageSize: Number(page.page_size) || 20,
+    };
+  },
+
+  async getServer(serverId: number | string): Promise<HardwareServer | null> {
+    try {
+      const response = await http.get<{ data: RawServer }>(`${ENDPOINTS.serverList}/${serverId}`, {
+        headers: authHeader(),
+      });
+      const raw = response?.data?.data ?? response?.data;
+      if (!raw || typeof raw !== "object") return null;
+      return mapRawServer(raw as RawServer);
+    } catch {
+      return null;
+    }
+  },
+
+  async getServerTimeSlots(serverId: number | string, params: { unit: RentalUnit; date: string }): Promise<TimeSlot[]> {
+    const response = await http.get(`${ENDPOINTS.serverTimeSlots(serverId)}`, {
       params,
       headers: authHeader(),
     });
-    return response.data.data;
-  },
-
-  async getServerTimeSlots(serverId: number, params: { unit: RentalUnit; date: string }): Promise<TimeSlot[]> {
-    if (USE_MOCKS) {
-      return delay(getMockTimeSlots({ serverId, unit: params.unit, date: params.date }));
-    }
-
-    const response = await http.get<{ data: TimeSlot[] }>(`${ENDPOINTS.serverTimeSlots(serverId)}`, {
-      params,
-      headers: authHeader(),
-    });
-    return response.data.data;
+    const raw = response?.data?.data ?? response?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((s: { start_at?: string; end_at?: string; is_reserved?: boolean; startAt?: string; endAt?: string; isReserved?: boolean }) => ({
+      startAt: s.start_at ?? s.startAt ?? "",
+      endAt: s.end_at ?? s.endAt ?? "",
+      isReserved: s.is_reserved ?? s.isReserved ?? false,
+    }));
   },
 
   async getMonthAvailability(
-    serverId: number,
+    serverId: number | string,
     params: { unit: RentalUnit; month: string }
   ): Promise<CalendarDayAvailability[]> {
-    if (USE_MOCKS) {
-      return delay(getMockMonthAvailability({ serverId, unit: params.unit, month: params.month }));
-    }
-
-    const response = await http.get<{ data: CalendarDayAvailability[] }>(
-      `${ENDPOINTS.serverMonthAvailability(serverId)}`,
-      {
-        params,
-        headers: authHeader(),
-      }
-    );
-    return response.data.data;
+    const response = await http.get(`${ENDPOINTS.serverMonthAvailability(serverId)}`, {
+      params,
+      headers: authHeader(),
+    });
+    const raw = response?.data?.data ?? response?.data;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((d: { date?: string; status?: string }) => ({
+      date: d.date ?? "",
+      status: (d.status === "available" || d.status === "partial" || d.status === "reserved" ? d.status : "available") as CalendarDayAvailability["status"],
+    }));
   },
 
   async getReservationPreview(payload: {
-    serverId: number;
+    serverId: number | string;
     unit: RentalUnit;
     startAt: string;
     endAt: string;
   }): Promise<ReservationPreview> {
-    if (USE_MOCKS) return delay(getMockPreview(payload));
-
     const response = await http.post(`${ENDPOINTS.reservationPreview}`, payload, {
       headers: authHeader(),
     });
     const data = response?.data?.data ?? response?.data;
 
-    const serverId = Number(data?.serverId ?? data?.server_id ?? payload.serverId);
+    const rawServerId = data?.serverId ?? data?.server_id ?? payload.serverId;
+    const serverId = typeof rawServerId === "string" ? rawServerId : Number(rawServerId);
     const unit = (data?.unit ?? payload.unit) as RentalUnit;
     const startAt = String(data?.startAt ?? data?.start_at ?? payload.startAt);
     const endAt = String(data?.endAt ?? data?.end_at ?? payload.endAt);
     const totalAmount = Number(data?.totalAmount ?? data?.total_amount ?? 0);
     const previewId = data?.previewId ?? data?.preview_id;
 
-    if (!Number.isFinite(serverId) || !startAt || !endAt || !Number.isFinite(totalAmount)) {
+    const validServerId = typeof serverId === "number" ? Number.isFinite(serverId) : serverId.length > 0;
+    if (!validServerId || !startAt || !endAt || !Number.isFinite(totalAmount)) {
       throw new Error("INVALID_PREVIEW_RESPONSE");
     }
 
@@ -254,30 +190,6 @@ export const hardwareApi = {
   },
 
   async checkoutReservation(payload: CheckoutReservationPayload): Promise<CheckoutReservationResult> {
-    if (USE_MOCKS) {
-      const services = getMockMyServicesStore();
-      const servers = getMockServersStore();
-      const currentPhone = getCurrentMockPhoneFromToken();
-      const nextReservationId =
-        services.length > 0 ? Math.max(...services.map((item) => item.reservationId)) + 1 : 5001;
-      const server = servers.find((item) => item.id === payload.serverId);
-
-      const created: PurchasedService = {
-        reservationId: nextReservationId,
-        serverName: server?.name ?? `Server ${payload.serverId}`,
-        startAt: payload.startAt,
-        endAt: payload.endAt,
-        totalAmount: payload.totalAmount,
-        ipAddress: null,
-        username: null,
-        password: null,
-        ownerPhone: currentPhone,
-      };
-
-      setMockMyServicesStore([created, ...services]);
-      return delay({ success: true, reservationId: nextReservationId });
-    }
-
     const requestBody = payload.previewId
       ? { preview_id: payload.previewId }
       : {
@@ -293,12 +205,10 @@ export const hardwareApi = {
       response = await http.post(`${ENDPOINTS.reservationCheckout}`, requestBody, {
         headers: authHeader(),
       });
-    } catch (error) {
-      // Fallback for backends that still expect camelCase request body.
+    } catch {
       response = await http.post(`${ENDPOINTS.reservationCheckout}`, payload, {
         headers: authHeader(),
       });
-      void error;
     }
     const reservationId =
       response?.data?.data?.reservation_id ??
@@ -306,90 +216,113 @@ export const hardwareApi = {
       response?.data?.reservation_id ??
       response?.data?.reservationId;
 
-    if (typeof reservationId !== "number") {
+    if (reservationId == null || (typeof reservationId === "string" && reservationId.trim() === "")) {
       throw new Error("INVALID_CHECKOUT_RESPONSE");
     }
 
-    return { success: true, reservationId };
+    return { success: true, reservationId: reservationId as number | string };
   },
 
   async getMyServices(): Promise<PurchasedService[]> {
-    if (USE_MOCKS) {
-      const role = getCurrentRole();
-      const phone = getCurrentMockPhoneFromToken();
-      const services = getMockMyServicesStore();
-
-      if (role === "admin") return delay(services);
-      if (!phone) return delay(services);
-
-      return delay(services.filter((item) => !item.ownerPhone || item.ownerPhone === phone));
+    try {
+      const response = await http.get(ENDPOINTS.userServices, {
+        headers: authHeader(),
+      });
+      const raw = response.data?.data ?? response.data;
+      const arr = Array.isArray(raw) ? raw : [];
+      return arr.map((item: Record<string, unknown>) => ({
+        reservationId: item.reservation_id ?? item.reservationId,
+        serverName: item.server_name ?? item.serverName ?? "",
+        startAt: item.start_at ?? item.startAt ?? "",
+        endAt: item.end_at ?? item.endAt ?? "",
+        totalAmount: Number(item.total_amount ?? item.totalAmount ?? 0),
+        ipAddress: (item.ip_address ?? item.ipAddress) ?? null,
+        username: (item.username ?? item.username) ?? null,
+        password: (item.password ?? item.password) ?? null,
+      })) as PurchasedService[];
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        return [];
+      }
+      throw err;
     }
-
-    const response = await http.get<{ data: PurchasedService[] }>(`${ENDPOINTS.userServices}`, {
-      headers: authHeader(),
-    });
-    return response.data.data;
   },
 
   async getAdminServers(): Promise<HardwareServer[]> {
-    if (USE_MOCKS) return delay(getMockServersStore());
-
-    const response = await http.get<{ data: HardwareServer[] }>(`${ENDPOINTS.adminServers}`, {
+    const response = await http.get(`${ENDPOINTS.adminServers}`, {
       headers: authHeader(),
     });
-    return response.data.data;
+    const wrapper = response.data?.data ?? response.data;
+    const raw = wrapper?.data ?? wrapper;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((s: RawServer) => mapRawServer(s));
   },
 
   async createAdminServer(payload: Omit<HardwareServer, "id">): Promise<HardwareServer> {
-    if (USE_MOCKS) {
-      const servers = getMockServersStore();
-      const nextId = servers.length > 0 ? Math.max(...servers.map((item) => item.id)) + 1 : 1;
-      const created: HardwareServer = { id: nextId, ...payload };
-      const updated = [...servers, created];
-      setMockServersStore(updated);
-      return delay(created);
-    }
+    const requestBody = {
+      name: payload.name,
+      cpu: payload.cpu,
+      gpu: payload.gpu,
+      ram_gb: payload.ramGb,
+      disk_gb: payload.diskGb,
+      os: payload.os,
+      hourly_price: payload.hourlyPrice,
+      daily_price: payload.dailyPrice,
+      status: payload.status,
+    };
 
-    const response = await http.post<{ data: HardwareServer }>(
-      `${ENDPOINTS.adminServers}`,
-      payload,
-      { headers: authHeader() }
-    );
-    return response.data.data;
+    const response = await http.post(`${ENDPOINTS.adminServers}`, requestBody, {
+      headers: authHeader(),
+    });
+    const raw = response.data?.data ?? response.data;
+    return {
+      id: raw.id,
+      name: raw.name,
+      cpu: raw.cpu,
+      gpu: raw.gpu,
+      ramGb: raw.ram_gb ?? raw.ramGb,
+      diskGb: raw.disk_gb ?? raw.diskGb,
+      os: raw.os,
+      hourlyPrice: raw.hourly_price ?? raw.hourlyPrice,
+      dailyPrice: raw.daily_price ?? raw.dailyPrice,
+      status: raw.status as HardwareServer["status"],
+    };
   },
 
   async updateAdminServer(
-    serverId: number,
+    serverId: number | string,
     payload: Partial<Omit<HardwareServer, "id">>
   ): Promise<HardwareServer> {
-    if (USE_MOCKS) {
-      const servers = getMockServersStore();
-      const index = servers.findIndex((item) => item.id === serverId);
-      if (index === -1) throw new Error("SERVER_NOT_FOUND");
+    const requestBody: Record<string, unknown> = {};
+    if (payload.name !== undefined) requestBody.name = payload.name;
+    if (payload.cpu !== undefined) requestBody.cpu = payload.cpu;
+    if (payload.gpu !== undefined) requestBody.gpu = payload.gpu;
+    if (payload.ramGb !== undefined) requestBody.ram_gb = payload.ramGb;
+    if (payload.diskGb !== undefined) requestBody.disk_gb = payload.diskGb;
+    if (payload.os !== undefined) requestBody.os = payload.os;
+    if (payload.hourlyPrice !== undefined) requestBody.hourly_price = payload.hourlyPrice;
+    if (payload.dailyPrice !== undefined) requestBody.daily_price = payload.dailyPrice;
+    if (payload.status !== undefined) requestBody.status = payload.status;
 
-      const updatedServer: HardwareServer = { ...servers[index], ...payload };
-      const updated = [...servers];
-      updated[index] = updatedServer;
-      setMockServersStore(updated);
-      return delay(updatedServer);
-    }
-
-    const response = await http.patch<{ data: HardwareServer }>(
-      `${ENDPOINTS.adminServers}/${serverId}`,
-      payload,
-      { headers: authHeader() }
-    );
-    return response.data.data;
+    const response = await http.patch(`${ENDPOINTS.adminServers}/${serverId}`, requestBody, {
+      headers: authHeader(),
+    });
+    const raw = response.data?.data ?? response.data;
+    return {
+      id: raw.id,
+      name: raw.name,
+      cpu: raw.cpu,
+      gpu: raw.gpu,
+      ramGb: raw.ram_gb ?? raw.ramGb,
+      diskGb: raw.disk_gb ?? raw.diskGb,
+      os: raw.os,
+      hourlyPrice: raw.hourly_price ?? raw.hourlyPrice,
+      dailyPrice: raw.daily_price ?? raw.dailyPrice,
+      status: raw.status as HardwareServer["status"],
+    };
   },
 
-  async deleteAdminServer(serverId: number): Promise<{ success: boolean }> {
-    if (USE_MOCKS) {
-      const servers = getMockServersStore();
-      const updated = servers.filter((item) => item.id !== serverId);
-      setMockServersStore(updated);
-      return delay({ success: true });
-    }
-
+  async deleteAdminServer(serverId: number | string): Promise<{ success: boolean }> {
     await http.delete(`${ENDPOINTS.adminServers}/${serverId}`, {
       headers: authHeader(),
     });
@@ -397,69 +330,61 @@ export const hardwareApi = {
   },
 
   async getAdminUsers(): Promise<AdminUser[]> {
-    if (USE_MOCKS) return delay(mockAdminUsers);
-
-    const response = await http.get<{ data: AdminUser[] }>(`${ENDPOINTS.adminUsers}`, {
+    const response = await http.get(`${ENDPOINTS.adminUsers}`, {
       headers: authHeader(),
     });
-    return response.data.data;
+    const wrapper = response.data?.data ?? response.data;
+    const raw = wrapper?.data ?? wrapper;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((u: Record<string, unknown>) => ({
+      id: u.id ?? u.account_id,
+      fullName: `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim() || String(u.full_name ?? ""),
+      phoneNumber: String(u.phone_number ?? u.phoneNumber ?? ""),
+      email: String(u.email ?? ""),
+      createdAt: String(u.created_at ?? u.createdAt ?? ""),
+    })) as AdminUser[];
   },
 
   async getAdminReservations(): Promise<AdminReservation[]> {
-    if (USE_MOCKS) {
-      const fromServices = getMockMyServicesStore().map(toAdminReservation);
-      if (fromServices.length > 0) return delay(fromServices);
-
-      return delay(mockAdminReservations);
-    }
-
-    const response = await http.get<{ data: AdminReservation[] }>(
-      `${ENDPOINTS.adminReservations}`,
-      { headers: authHeader() }
-    );
-    return response.data.data;
+    const response = await http.get(`${ENDPOINTS.adminReservations}`, {
+      headers: authHeader(),
+    });
+    const wrapper = response.data?.data ?? response.data;
+    const raw = wrapper?.data ?? wrapper;
+    const arr = Array.isArray(raw) ? raw : [];
+    return arr.map((r: Record<string, unknown>) => ({
+      reservationId: r.id ?? r.reservation_id ?? r.reservationId,
+      userFullName: String(r.user_full_name ?? r.userFullName ?? ""),
+      serverName: String(r.server_name ?? r.serverName ?? ""),
+      startAt: String(r.start_at ?? r.startAt ?? ""),
+      endAt: String(r.end_at ?? r.endAt ?? ""),
+      totalAmount: Number(r.total_amount ?? r.totalAmount ?? 0),
+      ipAddress: (r.ip_address ?? r.ipAddress) as string | null,
+      username: r.username as string | null,
+      password: r.password as string | null,
+      userPhone: String(r.user_phone ?? r.userPhone ?? ""),
+      status: String(r.status ?? "PENDING"),
+    })) as AdminReservation[];
   },
 
   async assignServiceCredentials(payload: {
-    reservationId: number;
+    reservationId: number | string;
     username: string;
     password: string;
     ipAddress: string;
   }): Promise<{ success: boolean }> {
-    if (USE_MOCKS) {
-      const services = getMockMyServicesStore();
-      const index = services.findIndex((item) => item.reservationId === payload.reservationId);
+    const requestBody = {
+      reservation_id: String(payload.reservationId),
+      ip_address: payload.ipAddress,
+      username: payload.username,
+      password: payload.password,
+    };
 
-      if (index === -1) {
-        services.push({
-          reservationId: payload.reservationId,
-          serverName: `Reservation ${payload.reservationId}`,
-          startAt: new Date().toISOString(),
-          endAt: new Date().toISOString(),
-          totalAmount: 0,
-          ipAddress: payload.ipAddress,
-          username: payload.username,
-          password: payload.password,
-          ownerPhone: null,
-        });
-      } else {
-        services[index] = {
-          ...services[index],
-          ipAddress: payload.ipAddress,
-          username: payload.username,
-          password: payload.password,
-        };
-      }
-
-      setMockMyServicesStore(services);
-      return delay({ success: true });
-    }
-
-    await http.post(`${ENDPOINTS.adminCredentials}`, payload, {
+    await http.post(`${ENDPOINTS.adminCredentials}`, requestBody, {
       headers: authHeader(),
     });
     return { success: true };
   },
 };
 
-export { ENDPOINTS, USE_MOCKS };
+export { ENDPOINTS };

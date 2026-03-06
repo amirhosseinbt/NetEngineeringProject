@@ -18,7 +18,6 @@ export default function Explore() {
     const dispatch = useDispatch<AppDispatch>();
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [isVip, setIsVip] = useState<boolean | null>(null);
     const animatedComponents = makeAnimated();
     const {productsChoice} = useSelector((state: RootState) => state.compatible)
 
@@ -51,9 +50,6 @@ export default function Explore() {
     };
 
     useEffect(() => {
-        // Access localStorage inside useEffect to ensure client-side execution
-        const isVipStatus = localStorage.getItem("is_vip") === "true"; // Add this conversion
-        setIsVip(isVipStatus);
         const token = localStorage.getItem("token");
         const fetchProduct = async () => {
             try {
@@ -61,8 +57,8 @@ export default function Explore() {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/product/list`, {headers: {Authorization: token}});
                 setProducts(response.data.data);
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }
@@ -72,27 +68,8 @@ export default function Explore() {
 
     return <>
         <div className='size-full flex flex-col'>
-            <div className='w-full bg-muted rounded-b-xl flex items-center justify-center h-12 relative shadow-xl'>
-                {isVip && <button
-                    onClick={() => dispatch(updateCompatDialog(true))}
-                    className='bg-[#4771F1] w-64 h-[47.57px] rounded-3xl text-white absolute -bottom-6 hover:bg-white hover:text-[#4771F1] font-bold shadow duration-300 active:scale-95 cursor-pointer'>سازگاریاب
-                </button>}
-            </div>
+            <div className='w-full bg-muted rounded-b-xl flex items-center justify-center h-12 relative shadow-xl' />
             <div className='flex flex-col w-full gap-5 my-10 px-10 py-4'>
-                {
-                    isVip && <Select
-                        options={options}
-                        isMulti
-                        className="basic-multi-select"
-                        classNamePrefix="select"
-                        components={animatedComponents}
-                        closeMenuOnSelect={false}
-                        placeholder='فیلتر'
-                        onChange={handleCategorySelect}
-                        isSearchable
-                        noOptionsMessage={() => "دسته بندی یافت نشد"}
-                    />
-                }
                 {
                     loading
                         ? Array.from({length : 4}).map((_,index)=>(
@@ -132,14 +109,6 @@ export default function Explore() {
                         : products.length > 0 && products.map((product: any, index) => (
                         <div key={product?.id}
                              className='w-full bg-[#D9D9D9] shadow-xl outline-0 hover:outline-1 outline-[#244bc5] rounded-md flex justify-between items-center relative px-10 py-4'>
-                            {isVip && (
-                                <input
-                                    type="checkbox"
-                                    checked={productsChoice.includes(product.id)}
-                                    onChange={() => handleProductSelect(product.id)}
-                                    className="absolute left-2 top-2 w-5 h-5 cursor-pointer"
-                                />
-                            )}
                             <div className='flex gap-14 items-center'>
                                 <Image src='/images/picture.png' alt='picture' width='80' height='80'/>
                                 <ul>

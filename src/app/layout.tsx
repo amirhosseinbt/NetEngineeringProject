@@ -8,8 +8,8 @@ import AuthToken from '@/components/AuthToken'
 
 
 export const metadata: Metadata = {
-    title: "Pissaze",
-    description: "This is Pissaze, an online shopping platform",
+    title: "اسلات باکس",
+    description: "اسلات باکس - سامانه رزرو سرور و سخت‌افزار",
     icons: [
         {
             rel: 'icon',

@@ -4,42 +4,76 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { UserRound, Phone } from "lucide-react";
+import { UserRound, Phone, Lock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import Spinner from "@/utils/Spinner";
 import { authApi } from "@/services/authApi";
+import { hashPassword } from "@/lib/authCrypto";
+import { getBackendErrorMessage } from "@/lib/apiError";
+import AuthInput from "@/components/auth/AuthInput";
+
+const MIN_PASSWORD_LENGTH = 6;
+const PHONE_LENGTH = 11;
+
+/** Simple email format check when user enters an email. */
+function isValidEmail(value: string): boolean {
+  if (!value.trim()) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
 
 export default function RegisterPage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const passwordsMatch = password === confirmPassword;
+  const passwordLongEnough = password.length >= MIN_PASSWORD_LENGTH;
+  const emailValid = isValidEmail(email);
   const canSubmit =
     firstName.trim().length > 1 &&
     lastName.trim().length > 1 &&
-    phoneNumber.length === 11;
+    phoneNumber.length === PHONE_LENGTH &&
+    passwordLongEnough &&
+    passwordsMatch &&
+    emailValid;
 
   const handleRegister = async () => {
+    if (!canSubmit) return;
     try {
       setLoading(true);
-      await authApi.register({
+      const hashed = await hashPassword(password);
+      const result = await authApi.register({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phoneNumber,
+        email: email.trim() || undefined,
+        password: hashed,
       });
 
-      toast.success("ثبت نام با موفقیت انجام شد. حالا وارد شوید.");
-      router.push("/login");
-    } catch (e: unknown) {
-      console.log(e);
-
-      if (e instanceof Error && e.message === "PHONE_EXISTS") {
-        toast.error("این شماره قبلا ثبت نام شده است.");
+      if (result.token) {
+        localStorage.setItem("token", result.token);
+        if (result.refreshToken) {
+          localStorage.setItem("refresh_token", result.refreshToken);
+        }
+        const expirationDays = parseInt(process.env.NEXT_PUBLIC_EXPIRE_TOKEN ?? "1", 10);
+        const expirationDate = new Date(
+          Date.now() + expirationDays * 24 * 60 * 60 * 1000
+        ).toISOString();
+        localStorage.setItem("token_expiration", expirationDate);
+        localStorage.setItem("user_role", "user");
+        toast.success("ثبت نام با موفقیت انجام شد؛ وارد شدید.");
+        router.push("/");
       } else {
-        toast.error("ثبت نام انجام نشد. دوباره تلاش کنید.");
+        toast.success("ثبت نام با موفقیت انجام شد. حالا وارد شوید.");
+        router.push("/login");
       }
+    } catch (e: unknown) {
+      toast.error(getBackendErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -47,68 +81,121 @@ export default function RegisterPage() {
 
   return (
     <div
-      className='w-full h-screen relative bg-[#2148C0]'
+      className="w-full min-h-screen relative bg-[#2148C0] flex items-center justify-center p-4"
       style={{
-        backgroundImage: `url('/images/BG.webp')`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'cover',
+        backgroundImage: "url('/images/BG.webp')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
       }}
     >
-      <div className='size-full flex items-center justify-center'>
-        <div className='flex flex-col items-center justify-center gap-8 rounded-2xl border border-white/30 bg-white/10 px-8 py-10 shadow-2xl backdrop-blur-sm'>
-          <Image src='/images/icon.svg' alt='logo' width={120} height={120} />
+      <div className="w-full max-w-[420px] flex justify-center" dir="rtl">
+        <div className="auth-form-card">
+          <Image src="/images/icon.svg" alt="لوگو" width={100} height={100} priority />
 
-          <div className='flex items-center flex-col justify-center gap-4 w-[320px]'>
-            <p className='text-white text-lg font-bold'>ثبت نام کاربر</p>
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <UserRound className='text-white' size={18} />
-              <input
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder='نام'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
-              />
-            </div>
+          <p className="auth-form-title">ثبت نام کاربر</p>
 
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <UserRound className='text-white' size={18} />
-              <input
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                placeholder='نام خانوادگی'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
-              />
-            </div>
+          <div className="auth-form-fields">
+            <AuthInput
+              id="register-first-name"
+              label="نام"
+              required
+              icon={<UserRound />}
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="نام"
+              aria-label="نام"
+            />
 
-            <div className='flex items-center border h-10 border-white w-full rounded-md px-2'>
-              <Phone className='text-white' size={18} />
-              <input
-                type='tel'
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && canSubmit) {
-                    event.preventDefault();
-                    handleRegister();
-                  }
-                }}
-                pattern='[0-9]*'
-                inputMode='numeric'
-                placeholder='شماره تلفن'
-                className='w-full text-white px-2 py-1 outline-none bg-transparent placeholder:text-slate-200'
-              />
-            </div>
+            <AuthInput
+              id="register-last-name"
+              label="نام خانوادگی"
+              required
+              icon={<UserRound />}
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="نام خانوادگی"
+              aria-label="نام خانوادگی"
+            />
+
+            <AuthInput
+              id="register-phone"
+              label="شماره تلفن"
+              required
+              icon={<Phone />}
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 11))}
+              placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+              dir="ltr"
+              aria-label="شماره تلفن"
+            />
+
+            <AuthInput
+              id="register-email"
+              label="ایمیل (اختیاری)"
+              icon={<Mail />}
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@domain.com"
+              dir="ltr"
+              error={email.trim() && !emailValid ? "فرمت ایمیل معتبر نیست." : undefined}
+              aria-label="ایمیل"
+            />
+
+            <AuthInput
+              id="register-password"
+              label={`رمز عبور (حداقل ${MIN_PASSWORD_LENGTH} کاراکتر)`}
+              required
+              icon={<Lock />}
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              aria-label="رمز عبور"
+            />
+
+            <AuthInput
+              id="register-confirm-password"
+              label="تکرار رمز عبور"
+              required
+              icon={<Lock />}
+              type="password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && canSubmit) {
+                  e.preventDefault();
+                  handleRegister();
+                }
+              }}
+              placeholder="••••••••"
+              error={confirmPassword && !passwordsMatch ? "رمز عبور و تکرار آن یکسان نیستند." : undefined}
+              aria-label="تکرار رمز عبور"
+            />
+
+            {password.length > 0 && !passwordLongEnough && (
+              <p className="text-red-300 text-sm">رمز عبور حداقل {MIN_PASSWORD_LENGTH} کاراکتر باشد.</p>
+            )}
 
             <button
-              type='button'
+              type="button"
               disabled={!canSubmit || loading}
               onClick={handleRegister}
-              className='primary-btn h-10 w-full text-base disabled:brightness-75'
+              className="primary-btn h-11 w-full text-base disabled:brightness-75 mt-1"
             >
               {loading ? <Spinner /> : "ثبت نام"}
             </button>
 
-            <Link href='/login' className='text-white text-sm underline underline-offset-4'>
+            <Link
+              href="/login"
+              className="text-white/95 text-sm underline underline-offset-4 text-center w-full hover:text-white"
+            >
               قبلا ثبت نام کرده اید؟ ورود
             </Link>
           </div>

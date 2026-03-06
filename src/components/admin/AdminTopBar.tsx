@@ -3,12 +3,21 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { authApi } from "@/services/authApi";
 
 export default function AdminTopBar() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Still clear local state and redirect
+    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("token_expiration");
+    localStorage.removeItem("user_role");
     toast.success("خروج از پنل ادمین با موفقیت انجام شد.");
     router.push("/login");
   };

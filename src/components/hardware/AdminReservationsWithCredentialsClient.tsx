@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { hardwareApi } from "@/services/hardwareApi";
+import { getBackendErrorMessage } from "@/lib/apiError";
 import type { AdminReservation } from "@/types/hardware";
 
 interface AdminReservationsWithCredentialsClientProps {
@@ -33,52 +35,10 @@ function formatRemaining(endAt: string): string {
   return `${Math.max(days, 1)} روز`;
 }
 
-function mask(value?: string | null): string {
-  if (!value) return "تنظیم نشده";
-  if (value.length <= 4) return value;
-  return `${value.slice(0, 2)}***${value.slice(-2)}`;
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("fa-IR").format(value);
-}
-
-function formatReservationLabel(item: AdminReservation): string {
-  return `#${formatNumber(item.reservationId)} - ${item.userFullName}`;
-}
-
-function formatUserServer(item: AdminReservation): string {
-  return `${item.userFullName} / ${item.serverName}`;
-}
-
-function formatCredential(item: AdminReservation): string {
-  if (!item.username || !item.ipAddress) return "تنظیم نشده";
-  return `${item.username} @ ${item.ipAddress}`;
-}
-
-function formatTableDate(item: AdminReservation): string {
-  return `${formatDateTime(item.startAt)} تا ${formatDateTime(item.endAt)}`;
-}
-
-function formatSelectedMessage(item: AdminReservation | null): string {
-  if (!item) return "";
-  if (item.username && item.password && item.ipAddress) {
-    return `ورود فعلی: ${item.username} @ ${item.ipAddress} - رمز: ${mask(item.password)}`;
-  }
-  return "برای این رزرو هنوز اطلاعات ورود تنظیم نشده است.";
-}
-
-function toReservationId(value: string): number | null {
-  if (!value) return null;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return null;
-  return parsed;
-}
-
 function normalizeReservationId(
   list: AdminReservation[],
-  selectedReservationId: number | null
-): number | null {
+  selectedReservationId: number | string | null
+): number | string | null {
   if (list.length === 0) return null;
   if (selectedReservationId === null) return list[0].reservationId;
   const exists = list.some((item) => item.reservationId === selectedReservationId);
@@ -90,7 +50,12 @@ function rowKey(item: AdminReservation, index: number): string {
 }
 
 function sortReservations(list: AdminReservation[]): AdminReservation[] {
-  return [...list].sort((a, b) => b.reservationId - a.reservationId);
+  return [...list].sort((a, b) => {
+    const x = a.reservationId;
+    const y = b.reservationId;
+    if (typeof x === "number" && typeof y === "number") return y - x;
+    return String(y).localeCompare(String(x));
+  });
 }
 
 function resolveVisibleReservations(list: AdminReservation[], limit?: number): AdminReservation[] {
@@ -98,8 +63,49 @@ function resolveVisibleReservations(list: AdminReservation[], limit?: number): A
   return list;
 }
 
-function validateCredentialFields(ipAddress: string, username: string, password: string): boolean {
-  return ipAddress.trim().length > 0 && username.trim().length > 0 && password.trim().length > 0;
+const IP_REGEX = /^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/;
+const USERNAME_REGEX = /^[a-zA-Z][a-zA-Z0-9._-]{1,31}$/;
+const PASSWORD_MIN_LENGTH = 6;
+
+interface ValidationErrors {
+  ipAddress?: string;
+  username?: string;
+  password?: string;
+}
+
+function validateIP(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return "آدرس IP الزامی است";
+  if (!IP_REGEX.test(trimmed)) return "فرمت IP نامعتبر است (مثال: 192.168.1.1)";
+  return undefined;
+}
+
+function validateUsername(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return "نام کاربری الزامی است";
+  if (trimmed.length < 2) return "نام کاربری حداقل ۲ کاراکتر باشد";
+  if (trimmed.length > 32) return "نام کاربری حداکثر ۳۲ کاراکتر باشد";
+  if (!USERNAME_REGEX.test(trimmed)) return "نام کاربری فقط حروف انگلیسی، عدد، . _ - مجاز است";
+  return undefined;
+}
+
+function validatePassword(value: string): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) return "رمز عبور الزامی است";
+  if (trimmed.length < PASSWORD_MIN_LENGTH) return `رمز عبور حداقل ${PASSWORD_MIN_LENGTH} کاراکتر باشد`;
+  return undefined;
+}
+
+function validateAllFields(ipAddress: string, username: string, password: string): ValidationErrors {
+  return {
+    ipAddress: validateIP(ipAddress),
+    username: validateUsername(username),
+    password: validatePassword(password),
+  };
+}
+
+function hasNoErrors(errors: ValidationErrors): boolean {
+  return !errors.ipAddress && !errors.username && !errors.password;
 }
 
 function emptyForm() {
@@ -131,34 +137,19 @@ function emptyPanel() {
   );
 }
 
-function currentCredentialLine(item: AdminReservation | null) {
-  const text = formatSelectedMessage(item);
-  if (!text) return null;
-  return <p className="mt-2 text-xs font-bold text-slate-500">{text}</p>;
-}
-
-function formTitle() {
-  return (
-    <div className="mb-3">
-      <p className="text-sm font-extrabold text-slate-700">ثبت اطلاعات ورود (فرم واحد)</p>
-      <p className="mt-1 text-xs font-bold text-slate-500">
-        رزرو را انتخاب کنید و IP، نام کاربری و رمز عبور را ثبت کنید.
-      </p>
-    </div>
-  );
-}
-
 export default function AdminReservationsWithCredentialsClient({
   limit,
 }: AdminReservationsWithCredentialsClientProps) {
   const [reservations, setReservations] = useState<AdminReservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null);
+  const [selectedReservationId, setSelectedReservationId] = useState<number | string | null>(null);
   const [ipAddress, setIpAddress] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const refresh = async () => {
     setLoading(true);
@@ -167,7 +158,7 @@ export default function AdminReservationsWithCredentialsClient({
       setReservations(list);
       setSelectedReservationId((prev) => normalizeReservationId(list, prev));
     } catch (error) {
-      console.log(error);
+      toast.error(getBackendErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -193,12 +184,23 @@ export default function AdminReservationsWithCredentialsClient({
     setUsername(form.username);
     setPassword(form.password);
     setMessage("");
+    setErrors({});
+    setTouched({});
   }, [selectedReservation]);
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setErrors(validateAllFields(ipAddress, username, password));
+  };
 
   const submitCredentials = async () => {
     if (!selectedReservationId) return;
-    if (!validateCredentialFields(ipAddress, username, password)) {
-      setMessage("لطفا IP، نام کاربری و رمز عبور را کامل وارد کنید.");
+
+    const validationErrors = validateAllFields(ipAddress, username, password);
+    setErrors(validationErrors);
+    setTouched({ ipAddress: true, username: true, password: true });
+
+    if (!hasNoErrors(validationErrors)) {
       return;
     }
 
@@ -213,8 +215,7 @@ export default function AdminReservationsWithCredentialsClient({
       setMessage("اطلاعات ورود با موفقیت ثبت شد.");
       await refresh();
     } catch (error) {
-      console.log(error);
-      setMessage("ثبت اطلاعات ورود ناموفق بود. دوباره تلاش کنید.");
+      setMessage(getBackendErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -225,76 +226,146 @@ export default function AdminReservationsWithCredentialsClient({
   if (isNoReservation(visibleReservations)) return emptyPanel();
 
   return (
-    <div className="mt-5 grid gap-3">
-      <div className="admin-credential-card">
-        {formTitle()}
-        <div className="grid gap-2 md:grid-cols-2">
-          <select
-            className="input-shell"
-            value={selectedReservationId ?? ""}
-            onChange={(event) => setSelectedReservationId(toReservationId(event.target.value))}
-          >
-            {visibleReservations.map((item) => (
-              <option key={item.reservationId} value={item.reservationId}>
-                {formatReservationLabel(item)}
-              </option>
-            ))}
-          </select>
-          <input
-            value={ipAddress}
-            onChange={(event) => setIpAddress(event.target.value)}
-            className="input-shell"
-            placeholder="IP سرور"
-          />
-          <input
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            className="input-shell"
-            placeholder="نام کاربری"
-          />
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="input-shell"
-            placeholder="رمز عبور"
-          />
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={submitCredentials}
-            disabled={saving || !selectedReservationId}
-            className="primary-btn w-fit disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving ? "در حال ثبت..." : "ذخیره اطلاعات ورود"}
-          </button>
-          {message ? <p className="text-xs font-bold text-slate-600">{message}</p> : null}
-        </div>
-        {currentCredentialLine(selectedReservation)}
-      </div>
-
+    <div className="space-y-6">
+      {/* Reservations Table with selectable rows */}
       <div className="admin-table-shell">
         <table className="admin-table">
           <thead>
             <tr>
-              <th>کاربر / سرور</th>
-              <th>بازه رزرو</th>
-              <th>زمان باقی مانده</th>
-              <th>اطلاعات ورود</th>
+              <th className="w-14">#</th>
+              <th>کاربر</th>
+              <th>سرور</th>
+              <th>شروع</th>
+              <th>پایان</th>
+              <th>زمان باقیمانده</th>
+              <th>دسترسی</th>
             </tr>
           </thead>
           <tbody>
-            {visibleReservations.map((item, index) => (
-              <tr key={rowKey(item, index)}>
-                <td>{formatUserServer(item)}</td>
-                <td>{formatTableDate(item)}</td>
-                <td>{formatRemaining(item.endAt)}</td>
-                <td>{formatCredential(item)}</td>
-              </tr>
-            ))}
+            {visibleReservations.map((item, index) => {
+              const isSelected = item.reservationId === selectedReservationId;
+              return (
+                <tr
+                  key={rowKey(item, index)}
+                  onClick={() => setSelectedReservationId(item.reservationId)}
+                  className={`cursor-pointer transition-colors ${isSelected ? "bg-[#edf2ff] ring-2 ring-inset ring-[#244BC5]/30" : "hover:bg-slate-50"}`}
+                >
+                  <td className="text-center">
+                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${isSelected ? "bg-[#244BC5] text-white" : "bg-[#edf2ff] text-[#244BC5]"}`}>
+                      {(index + 1).toLocaleString("fa-IR")}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="font-bold text-slate-800">{item.userFullName}</div>
+                    <div className="mt-0.5 text-xs text-slate-500" dir="ltr">{item.userPhone || "-"}</div>
+                  </td>
+                  <td className="font-medium text-slate-700">{item.serverName}</td>
+                  <td className="text-sm text-slate-600">{formatDateTime(item.startAt)}</td>
+                  <td className="text-sm text-slate-600">{formatDateTime(item.endAt)}</td>
+                  <td>
+                    <span className={`text-sm font-medium ${formatRemaining(item.endAt) === "پایان یافته" ? "text-red-500" : "text-emerald-600"}`}>
+                      {formatRemaining(item.endAt)}
+                    </span>
+                  </td>
+                  <td className="text-sm text-slate-600">
+                    {item.username && item.ipAddress ? (
+                      <span className="rounded bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-600">تنظیم شده</span>
+                    ) : (
+                      <span className="rounded bg-amber-50 px-2 py-1 text-xs font-bold text-amber-600">نیاز به تنظیم</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Credential Form - shown when a row is selected */}
+      {selectedReservationId && (
+        <div className="admin-form-card">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-base font-extrabold text-[#1d3ca1]">تنظیم اطلاعات دسترسی</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">
+                رزرو انتخاب شده: {selectedReservation?.userFullName} / {selectedReservation?.serverName}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedReservationId(null)}
+              className="text-xs font-bold text-slate-500 hover:text-slate-700"
+            >
+              لغو انتخاب
+            </button>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="admin-form-group">
+              <label className="admin-form-label">آدرس IP</label>
+              <input
+                value={ipAddress}
+                onChange={(event) => setIpAddress(event.target.value)}
+                onBlur={() => handleBlur("ipAddress")}
+                className={`input-shell ${touched.ipAddress && errors.ipAddress ? "border-red-400 focus:border-red-500" : ""}`}
+                placeholder="192.168.1.1"
+                dir="ltr"
+              />
+              {touched.ipAddress && errors.ipAddress && (
+                <span className="mt-1 text-xs font-bold text-red-500">{errors.ipAddress}</span>
+              )}
+            </div>
+
+            <div className="admin-form-group">
+              <label className="admin-form-label">نام کاربری</label>
+              <input
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                onBlur={() => handleBlur("username")}
+                className={`input-shell ${touched.username && errors.username ? "border-red-400 focus:border-red-500" : ""}`}
+                placeholder="root"
+                dir="ltr"
+              />
+              {touched.username && errors.username && (
+                <span className="mt-1 text-xs font-bold text-red-500">{errors.username}</span>
+              )}
+            </div>
+
+            <div className="admin-form-group">
+              <label className="admin-form-label">رمز عبور</label>
+              <input
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                onBlur={() => handleBlur("password")}
+                className={`input-shell ${touched.password && errors.password ? "border-red-400 focus:border-red-500" : ""}`}
+                placeholder="••••••••"
+                type="password"
+                dir="ltr"
+              />
+              {touched.password && errors.password && (
+                <span className="mt-1 text-xs font-bold text-red-500">{errors.password}</span>
+              )}
+            </div>
+
+            <div className="admin-form-group flex items-end">
+              <button
+                type="button"
+                onClick={submitCredentials}
+                disabled={saving}
+                className="primary-btn w-full disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "در حال ثبت..." : "ذخیره"}
+              </button>
+            </div>
+          </div>
+
+          {message && (
+            <p className={`mt-3 text-xs font-bold ${message.includes("موفقیت") ? "text-emerald-600" : "text-red-500"}`}>
+              {message}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
