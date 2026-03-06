@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import UserSidebar from "@/components/user/UserSidebar";
 
 export default function UserShell({
@@ -8,6 +11,8 @@ export default function UserShell({
   children: ReactNode;
   title?: string;
 }) {
+  const pathname = usePathname();
+
   return (
     <div className="user-shell">
       <header className="user-header">
@@ -15,7 +20,11 @@ export default function UserShell({
       </header>
       <div className="user-grid">
         <UserSidebar />
-        <main className="user-main-card">{children}</main>
+        <main className="user-main-card">
+          <div key={pathname} className="user-main-content">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );
