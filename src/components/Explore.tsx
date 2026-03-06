@@ -57,8 +57,8 @@ export default function Explore() {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/product/list`, {headers: {Authorization: token}});
                 setProducts(response.data.data);
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }

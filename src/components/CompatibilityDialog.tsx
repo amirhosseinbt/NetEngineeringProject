@@ -59,8 +59,7 @@ export default function CompatibilityDialog() {
                     setProducts(res.data.data);
                 }
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
                 setProducts([])
             } finally {
                 setLoading(false);

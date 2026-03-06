@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Server, ShoppingCart, Users } from "lucide-react";
+import { Server, ShoppingCart, Users } from "lucide-react";
 import { hardwareApi } from "@/services/hardwareApi";
 import type { DashboardStats } from "@/types/hardware";
 
@@ -21,8 +21,7 @@ export default function HomeStats() {
         setLoading(true);
         const data = await hardwareApi.getDashboardStats();
         setStats(data);
-      } catch (error) {
-        console.log(error);
+      } catch {
         setStats(defaultStats);
       } finally {
         setLoading(false);
@@ -57,15 +56,9 @@ export default function HomeStats() {
     <div className="mb-4">
       <div className="dashboard-hero">
         <div className="relative z-10">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold text-[#4b64b8]">نمای کلی اسلات باکس</p>
-              <p className="mt-1 text-xl font-extrabold text-[#1f2f67] md:text-2xl">داشبورد مدیریتی</p>
-            </div>
-            <span className="metric-pill">
-              <Activity size={13} className="ml-1" />
-              بروزرسانی زنده
-            </span>
+          <div className="mb-5">
+            <p className="text-xs font-bold text-[#4b64b8]">نمای کلی اسلات باکس</p>
+            <p className="mt-1 text-xl font-extrabold text-[#1f2f67] md:text-2xl">داشبورد مدیریتی</p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">

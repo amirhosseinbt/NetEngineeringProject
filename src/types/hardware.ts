@@ -67,18 +67,23 @@ export interface DashboardStats {
 }
 
 export interface AdminUser {
-  id: number;
+  /** API returns UUID string */
+  id: number | string;
   fullName: string;
   phoneNumber: string;
+  email?: string;
+  createdAt?: string;
 }
 
 export interface AdminReservation {
   /** API may return UUID string */
   reservationId: number | string;
   userFullName: string;
+  userPhone?: string;
   serverName: string;
   startAt: string;
   endAt: string;
+  totalAmount?: number;
   ipAddress?: string | null;
   username?: string | null;
   password?: string | null;

@@ -7,7 +7,7 @@ import Link from "next/link";
 import { User, Lock } from "lucide-react";
 import { toast } from "sonner";
 import Spinner from "@/utils/Spinner";
-import { AUTH_USE_MOCKS, authApi } from "@/services/authApi";
+import { authApi } from "@/services/authApi";
 import { hashPassword } from "@/lib/authCrypto";
 import { getBackendErrorMessage } from "@/lib/apiError";
 import AuthInput from "@/components/auth/AuthInput";
@@ -125,12 +125,6 @@ export default function Login() {
               placeholder="••••••••"
               aria-label="رمز عبور"
             />
-
-            {AUTH_USE_MOCKS && role === "admin" && (
-              <p className="text-white/90 text-xs w-full">
-                شماره تست ادمین در حالت mock: <span className="font-bold">09990000000</span>
-              </p>
-            )}
 
             <button
               type="button"

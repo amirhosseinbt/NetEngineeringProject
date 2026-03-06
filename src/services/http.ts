@@ -5,10 +5,6 @@ const API_BASE =
   process.env.NEXT_PUBLIC_URL ||
   "";
 
-const USE_MOCKS =
-  process.env.NEXT_PUBLIC_USE_MOCKS === "true" ||
-  (!process.env.NEXT_PUBLIC_USE_MOCKS && !API_BASE);
-
 function getStoredToken(): string {
   if (typeof window === "undefined") return "";
   return localStorage.getItem("token") || "";
@@ -92,4 +88,4 @@ http.interceptors.response.use(
   }
 );
 
-export { API_BASE, USE_MOCKS, authHeader, http };
+export { API_BASE, authHeader, http };

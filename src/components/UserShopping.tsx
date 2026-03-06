@@ -17,8 +17,8 @@ export default function UserShopping() {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/client/cart`, {headers: {Authorization: token}});
                 setCartStatus(response.data.data)
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }
@@ -30,8 +30,8 @@ export default function UserShopping() {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/client/lockCart`, {headers: {Authorization: token}});
                 setLockCart(response.data.data)
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }

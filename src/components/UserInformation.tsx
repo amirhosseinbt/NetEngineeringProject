@@ -18,8 +18,8 @@ export default function UserInformation() {
                 const response = await axios.get(`${process.env.NEXT_PUBLIC_URL}/client/`, {headers: {Authorization: token}});
                 setUserInfo(response.data.data);
                 setLoading(false);
-            } catch (e) {
-                console.log(e)
+            } catch {
+                // Error handled silently
             } finally {
                 setLoading(false);
             }

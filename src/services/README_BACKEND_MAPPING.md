@@ -1,25 +1,14 @@
-# Backend Mapping for New Hardware Reservation Modules
+# Backend Mapping for Hardware Reservation
 
-This file documents the **new routes/modules** added for hardware reservation.
-Existing project APIs are untouched.
+This file documents the routes/modules for hardware reservation.
 
-## Current Development Mode
+## Environment Variables
 
-Frontend can run without backend:
-
-- If `NEXT_PUBLIC_USE_MOCKS=true`, mock data is used.
-- If `NEXT_PUBLIC_USE_MOCKS` is not set, mock mode only when API base URL is empty.
-- If `NEXT_PUBLIC_USE_MOCKS=false` and API base URL is set, real backend is used.
-
-Environment variables:
-
-- `NEXT_PUBLIC_API_BASE_URL` (preferred)
-- `NEXT_PUBLIC_URL` (legacy fallback)
-- `NEXT_PUBLIC_USE_MOCKS=true|false`
+- `NEXT_PUBLIC_API_BASE_URL` - Backend API base URL (required)
+- `NEXT_PUBLIC_URL` - Legacy fallback for API URL
 
 Main client wrapper: `src/services/hardwareApi.ts`
 HTTP helpers: `src/services/http.ts`
-Mock source: `src/mocks/hardware.ts`
 
 ## New Frontend Routes
 

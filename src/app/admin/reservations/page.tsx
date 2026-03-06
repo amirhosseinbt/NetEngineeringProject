@@ -3,8 +3,10 @@ import AdminReservationsWithCredentialsClient from "@/components/hardware/AdminR
 export default function AdminReservationsPage() {
   return (
     <div>
-      <h1 className="admin-section-title">سفارش ها</h1>
-      <p className="admin-subtitle">همه رزروها به صورت یکپارچه نمایش داده می‌شوند.</p>
+      <div className="admin-page-header">
+        <h1 className="admin-section-title">سفارش‌ها</h1>
+        <p className="admin-subtitle">همه رزروها به صورت یکپارچه نمایش داده می‌شوند.</p>
+      </div>
       <AdminReservationsWithCredentialsClient />
     </div>
   );

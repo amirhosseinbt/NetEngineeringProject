@@ -2,9 +2,28 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { hardwareApi } from "@/services/hardwareApi";
 import { getBackendErrorMessage } from "@/lib/apiError";
 import type { HardwareServer } from "@/types/hardware";
+
+function StatusBadge({ status }: { status: HardwareServer["status"] }) {
+  const styles = {
+    AVAILABLE: "bg-emerald-100 text-emerald-800",
+    MAINTENANCE: "bg-amber-100 text-amber-800",
+    DISABLED: "bg-slate-200 text-slate-600",
+  };
+  const labels = {
+    AVAILABLE: "فعال",
+    MAINTENANCE: "در تعمیر",
+    DISABLED: "غیرفعال",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[status]}`}>
+      {labels[status]}
+    </span>
+  );
+}
 
 interface ServerForm {
   name: string;
@@ -63,7 +82,7 @@ export default function AdminServersCrudClient() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<ServerForm>(initialForm);
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | string | null>(null);
 
   const canSubmit = useMemo(() => {
     return (
@@ -128,14 +147,14 @@ export default function AdminServersCrudClient() {
     setForm(mapServerToForm(server));
   };
 
-  const handleDelete = async (serverId: number) => {
+  const handleDelete = async (serverId: number | string) => {
     const confirmed = window.confirm("از حذف این سرور مطمئن هستید؟");
     if (!confirmed) return;
 
     try {
       await hardwareApi.deleteAdminServer(serverId);
       toast.success("سرور حذف شد.");
-      if (editId === serverId) resetForm();
+      if (String(editId) === String(serverId)) resetForm();
       await refresh();
     } catch (error) {
       toast.error(getBackendErrorMessage(error));
@@ -147,116 +166,149 @@ export default function AdminServersCrudClient() {
   };
 
   return (
-    <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1.4fr]">
-      <div className="muted-panel">
-        <p className="mb-3 text-sm font-bold text-slate-700">
-          {editId === null ? "ایجاد سرور جدید" : `ویرایش سرور #${editId}`}
-        </p>
+    <div className="space-y-6">
+      {/* Form Section */}
+      <div className="admin-form-card">
+        <div className="admin-form-header">
+          {editId === null ? <Plus size={18} /> : <Pencil size={18} />}
+          <span>{editId === null ? "افزودن سرور جدید" : "ویرایش سرور"}</span>
+        </div>
 
-        <div className="grid gap-2">
-          <input
-            value={form.name}
-            onChange={(e) => updateField("name", e.target.value)}
-            placeholder="نام سرور"
-            className="input-shell"
-          />
-          <input
-            value={form.cpu}
-            onChange={(e) => updateField("cpu", e.target.value)}
-            placeholder="پردازنده"
-            className="input-shell"
-          />
-          <input
-            value={form.gpu}
-            onChange={(e) => updateField("gpu", e.target.value)}
-            placeholder="کارت گرافیک"
-            className="input-shell"
-          />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="admin-form-group">
+            <label className="admin-form-label">نام سرور</label>
+            <input
+              value={form.name}
+              onChange={(e) => updateField("name", e.target.value)}
+              placeholder="مثال: سرور پردازشی ۱"
+              className="input-shell"
+            />
+          </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="admin-form-group">
+            <label className="admin-form-label">پردازنده (CPU)</label>
+            <input
+              value={form.cpu}
+              onChange={(e) => updateField("cpu", e.target.value)}
+              placeholder="مثال: AMD EPYC 7763"
+              className="input-shell"
+            />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label">کارت گرافیک (GPU)</label>
+            <input
+              value={form.gpu}
+              onChange={(e) => updateField("gpu", e.target.value)}
+              placeholder="مثال: NVIDIA RTX 4090"
+              className="input-shell"
+            />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label">سیستم عامل</label>
+            <input
+              value={form.os}
+              onChange={(e) => updateField("os", e.target.value)}
+              placeholder="مثال: Ubuntu 22.04"
+              className="input-shell"
+            />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label">رم (GB)</label>
             <input
               value={form.ramGb}
               onChange={(e) => updateField("ramGb", e.target.value)}
-              placeholder="رم (GB)"
+              placeholder="128"
               type="number"
               min={1}
               className="input-shell"
             />
+          </div>
+
+          <div className="admin-form-group">
+            <label className="admin-form-label">دیسک (GB)</label>
             <input
               value={form.diskGb}
               onChange={(e) => updateField("diskGb", e.target.value)}
-              placeholder="دیسک (GB)"
+              placeholder="2000"
               type="number"
               min={1}
               className="input-shell"
             />
           </div>
 
-          <input
-            value={form.os}
-            onChange={(e) => updateField("os", e.target.value)}
-            placeholder="سیستم عامل"
-            className="input-shell"
-          />
-
-          <div className="grid grid-cols-2 gap-2">
+          <div className="admin-form-group">
+            <label className="admin-form-label">قیمت ساعتی (تومان)</label>
             <input
               value={form.hourlyPrice}
               onChange={(e) => updateField("hourlyPrice", e.target.value)}
-              placeholder="قیمت ساعتی"
-              type="number"
-              min={1}
-              className="input-shell"
-            />
-            <input
-              value={form.dailyPrice}
-              onChange={(e) => updateField("dailyPrice", e.target.value)}
-              placeholder="قیمت روزانه"
+              placeholder="25000"
               type="number"
               min={1}
               className="input-shell"
             />
           </div>
 
-          <select
-            value={form.status}
-            onChange={(e) => updateField("status", e.target.value as HardwareServer["status"])}
-            className="input-shell"
-          >
-            <option value="AVAILABLE">فعال</option>
-            <option value="MAINTENANCE">در حال تعمیر</option>
-            <option value="DISABLED">غیرفعال</option>
-          </select>
+          <div className="admin-form-group">
+            <label className="admin-form-label">قیمت روزانه (تومان)</label>
+            <input
+              value={form.dailyPrice}
+              onChange={(e) => updateField("dailyPrice", e.target.value)}
+              placeholder="500000"
+              type="number"
+              min={1}
+              className="input-shell"
+            />
+          </div>
 
-          <div className="mt-2 flex gap-2">
-            <button onClick={handleSubmit} disabled={!canSubmit || saving} className="primary-btn">
-              {saving ? "در حال ذخیره..." : editId === null ? "ایجاد سرور" : "ذخیره ویرایش"}
-            </button>
+          <div className="admin-form-group">
+            <label className="admin-form-label">وضعیت</label>
+            <select
+              value={form.status}
+              onChange={(e) => updateField("status", e.target.value as HardwareServer["status"])}
+              className="input-shell"
+            >
+              <option value="AVAILABLE">فعال</option>
+              <option value="MAINTENANCE">در حال تعمیر</option>
+              <option value="DISABLED">غیرفعال</option>
+            </select>
+          </div>
 
-            {editId !== null && (
-              <button onClick={resetForm} className="secondary-btn">
-                انصراف
+          <div className="admin-form-group flex items-end">
+            <div className="flex w-full gap-2">
+              <button onClick={handleSubmit} disabled={!canSubmit || saving} className="primary-btn flex-1">
+                {saving ? "در حال ذخیره..." : editId === null ? "افزودن" : "ذخیره"}
               </button>
-            )}
+              {editId !== null && (
+                <button onClick={resetForm} className="secondary-btn">
+                  انصراف
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="table-shell">
-        <table className="w-full text-right text-sm">
-          <thead className="bg-slate-100">
+      {/* Table Section */}
+      <div className="admin-table-shell">
+        <table className="admin-table">
+          <thead>
             <tr>
-              <th className="p-2">نام سرور</th>
-              <th className="p-2">CPU / GPU</th>
-              <th className="p-2">RAM / Disk</th>
-              <th className="p-2">وضعیت</th>
-              <th className="p-2">عملیات</th>
+              <th>نام سرور</th>
+              <th>پردازنده</th>
+              <th>کارت گرافیک</th>
+              <th>حافظه</th>
+              <th>قیمت</th>
+              <th>وضعیت</th>
+              <th>عملیات</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td className="p-4 text-center font-bold text-slate-700" colSpan={5}>
+                <td className="p-6 text-center" colSpan={7}>
                   در حال بارگذاری...
                 </td>
               </tr>
@@ -264,29 +316,39 @@ export default function AdminServersCrudClient() {
 
             {!loading &&
               servers.map((s) => (
-                <tr key={s.id} className="border-t border-slate-300 font-bold text-slate-700">
-                  <td className="p-2">{s.name}</td>
-                  <td className="p-2">
-                    <div>{s.cpu}</div>
-                    <div>{s.gpu}</div>
+                <tr key={s.id}>
+                  <td>
+                    <div className="font-bold text-slate-800">{s.name}</div>
+                    <div className="mt-0.5 text-xs text-slate-500">{s.os}</div>
                   </td>
-                  <td className="p-2">{s.ramGb}GB / {s.diskGb}GB</td>
-                  <td className="p-2">
-                    {s.status === "AVAILABLE" ? "فعال" : s.status === "MAINTENANCE" ? "در حال تعمیر" : "غیرفعال"}
+                  <td className="text-sm text-slate-600">{s.cpu}</td>
+                  <td className="text-sm text-slate-600">{s.gpu || "-"}</td>
+                  <td className="text-sm text-slate-600">
+                    <div>{s.ramGb} GB RAM</div>
+                    <div className="text-xs text-slate-500">{s.diskGb} GB Disk</div>
                   </td>
-                  <td className="p-2">
+                  <td className="text-sm">
+                    <div className="font-medium text-slate-700">{s.hourlyPrice.toLocaleString("fa-IR")} / ساعت</div>
+                    <div className="text-xs text-slate-500">{s.dailyPrice.toLocaleString("fa-IR")} / روز</div>
+                  </td>
+                  <td>
+                    <StatusBadge status={s.status} />
+                  </td>
+                  <td>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(s)}
-                        className="secondary-btn px-2 py-1 text-xs"
+                        className="admin-action-btn admin-action-btn-edit"
+                        title="ویرایش"
                       >
-                        ویرایش
+                        <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="danger-btn"
+                        className="admin-action-btn admin-action-btn-delete"
+                        title="حذف"
                       >
-                        حذف
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </td>
@@ -295,7 +357,7 @@ export default function AdminServersCrudClient() {
 
             {!loading && servers.length === 0 && (
               <tr>
-                <td className="p-4 text-center font-bold text-slate-700" colSpan={5}>
+                <td className="p-6 text-center text-slate-500" colSpan={7}>
                   هنوز سروری تعریف نشده است.
                 </td>
               </tr>
